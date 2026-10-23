@@ -1,1621 +1,1695 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mira-Default</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Fim da Escala 6x1: Como Não Deixar Turno Descoberto | Equipe na Nuvem</title>
+    <script src="assets/vendor/tailwind.js"></script>
+    <link href="assets/vendor/aos.css" rel="stylesheet">
+    <script src="assets/vendor/aos.js"></script>
+    <script src="assets/vendor/lucide.js"></script>
+    <script src="assets/vendor/d3.v7.min.js"></script>
+    <link href="assets/vendor/inter.css" rel="stylesheet">
+    <style>
+        /* @MIRA:THEME:START */
+        /* MIRA THEME: mira-dark (variação azul)
+           Identidade clássica: fundo preto, destaque em var(--mira-primary),
+           glassmorphism estruturado. */
+        :root {
+            --mira-primary: #4DA3FF;
+            --mira-bg: #000000;
+            --mira-text: #ffffff;
+            --mira-text-soft: rgba(255, 255, 255, 0.70);
+            --mira-text-softer: rgba(255, 255, 255, 0.50);
+            --mira-card-bg: rgba(255, 255, 255, 0.05);
+            --mira-card-border: rgba(255, 255, 255, 0.10);
+            --mira-glow-soft: rgba(77, 163, 255, 0.15);
+            --mira-glow-strong: rgba(77, 163, 255, 0.25);
+            --mira-icon-bg: rgba(77, 163, 255, 0.15);
+            --mira-icon-border: rgba(77, 163, 255, 0.30);
+            --mira-pill-bg: rgba(255, 255, 255, 0.04);
+            --mira-pill-border: rgba(255, 255, 255, 0.08);
+            --mira-stage-glow: rgba(77, 163, 255, 0.06);
+            --mira-accent-2: #6EE7F0;
+        }
 
-<!-- ==========================================================
-     MIRA-DEFAULT · template oficial padrão do Mira
-     ----------------------------------------------------------
-     Um slide = um título em cima e uma animação ocupando todo o
-     resto do quadro 16:9. Sem card, sem pílulas, sem moldura: a
-     animação É o slide.
+        /* ============================================================
+           MIRA — base.css
+           Estrutura compartilhada por todos os temas.
+           ============================================================ */
 
-     Veio do mira-studio-full, mas SÓ a parte de animação. Ficaram
-     de fora, de propósito, as coisas que existem para gravar:
-       - regra dos terços (animação 2/3 + câmera 1/3)
-       - layout de câmera cheia
-       - teleprompter e gravador
-     Slide comum não tem câmera. Quem precisa gravar usa
-     /mira-studio-full (16:9) ou /mira-studio (9:16), que seguem
-     existindo com essas peças.
+        body {
+            background: #000000;
+            background: var(--mira-bg);
+            min-height: 100vh;
+            color: var(--mira-text);
+            font-family: 'Inter', sans-serif;
+        }
 
-     ESTRUTURA DE UM SLIDE DE CONTEÚDO (é o contrato; os agentes
-     de animação procuram .anim-stage):
+        .primary-color { color: var(--mira-primary); }
+        .primary-bg { background: var(--mira-primary); }
 
-       <section>
-         <div class="slide-main">
-           <h2>Título <span class="accent">destacado</span></h2>
-           <div class="anim-stage"><svg id="..."></svg></div>
-         </div>
-       </section>
+        .glass-card {
+            background: var(--mira-card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--mira-card-border);
+            box-shadow: 0 10px 30px rgba(77, 163, 255, 0.15);
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+        }
 
-     O PALCO OCUPA O QUADRO INTEIRO, de borda a borda: o .anim-stage
-     é absoluto e cobre a <section> toda, por baixo do título. Não é
-     mais "o que sobra depois do título".
+        .glass-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(77, 163, 255, 0.25);
+        }
 
-     O TÍTULO FICA POR CIMA de tudo que é do template. A faixa de
-     z-index deste arquivo vai até 10; os módulos de autoria
-     (mira-draw, mira-edit) usam 99998 e acima, e continuam acima do
-     título de propósito, senão não daria para desenhar nem editar
-     por cima dele.
+        .icon-hero, .icon-container {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            background: var(--mira-icon-bg);
+            border: 1px solid var(--mira-icon-border);
+        }
 
-     A ANIMAÇÃO EVITA A FAIXA DO TÍTULO. O palco() mede o título e
-     entrega a faixa livre em unidades do viewBox:
+        .attribute-pill {
+            background: var(--mira-pill-bg);
+            border: 1px solid var(--mira-pill-border);
+            transition: all 0.25s ease;
+            border-radius: 9999px;
+        }
 
-       F.topo         y onde a área livre começa (abaixo do título)
-       F.alturaUtil   altura dessa área
-       F.vy(k)        mapeia 0..1 na faixa livre. Use no lugar de F.H * k
+        .attribute-pill:hover {
+            background: var(--mira-icon-bg);
+            border-color: var(--mira-icon-border);
+            transform: translateY(-3px);
+        }
 
-     Regra: nada FOCAL acima de F.topo. Ambiente pode atravessar,
-     porque atrás do título ele lê como profundidade, não como
-     conflito. Os 50px de padding continuam sendo a área segura das
-     bordas.
-     ========================================================== -->
-<link href="assets/vendor/inter.css" rel="stylesheet">
-<script src="assets/vendor/d3.v7.min.js"></script>
-<style>
-/* @MIRA:THEME:START */
-/* MIRA THEME: mira-dark (padrão)
-   Identidade clássica do canal: fundo preto, laranja vibrante,
-   glassmorphism no estilo clássico do canal. */
-:root {
-    --mira-primary: #FF904D;
-    --mira-crop: #35D07F;
-    --mira-bg: #000000;
-    --mira-text: #ffffff;
-    --mira-text-soft: rgba(255, 255, 255, 0.70);
-    --mira-text-softer: rgba(255, 255, 255, 0.50);
-    --mira-card-bg: rgba(255, 255, 255, 0.05);
-    --mira-card-border: rgba(255, 255, 255, 0.10);
-    --mira-glow-soft: rgba(255, 144, 77, 0.15);
-    --mira-glow-strong: rgba(255, 144, 77, 0.25);
-    --mira-icon-bg: rgba(255, 144, 77, 0.15);
-    --mira-icon-border: rgba(255, 144, 77, 0.30);
-    --mira-pill-bg: rgba(255, 255, 255, 0.04);
-    --mira-pill-border: rgba(255, 255, 255, 0.08);
-    --mira-stage-glow: rgba(255, 144, 77, 0.06);
-    --mira-accent-2: #FFC766;
-}
-/* @MIRA:THEME:END */
+        /* Palco de animação D3 */
+        .anim-stage {
+            width: 100%;
+            height: clamp(380px, 56vh, 580px);
+            aspect-ratio: 16 / 9;
+            background: radial-gradient(circle at 50% 50%, var(--mira-stage-glow), transparent 70%);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
 
-/* ----------------------------------------------------------
-   A estrutura vem DEPOIS do bloco do tema de propósito: o
-   "npx mira-animator new --theme=..." troca só aquele bloco, e
-   o que está aqui embaixo precisa continuar valendo por cima do
-   que o tema trouxer.
-   ---------------------------------------------------------- */
-:root {
-    --accent: var(--mira-primary);
-    --bg: var(--mira-bg);
-    --ink: var(--mira-text);
-    --muted: var(--mira-text-soft);
-    --line: var(--mira-card-border);
-    /* quadro 16:9 em telas largas, adaptável sem cortar conteúdo */
-    --fmt-w: min(100vw, calc(100dvh * 16 / 9));
-    --fmt-h: calc(var(--fmt-w) * 9 / 16);
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
+        .anim-stage svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
 
-html { background: #000000; scroll-behavior: smooth; scroll-snap-type: y proximity; }
-/* sem barra de rolagem: ela roubaria largura do quadro e criaria
-   scroll horizontal em tela cheia. Navegue por seta ou roda. */
-html { scrollbar-width: none; overflow-x: hidden; }
-html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+        .replay-btn {
+            background: var(--mira-pill-bg);
+            border: 1px solid var(--mira-pill-border);
+            color: var(--mira-text-soft);
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
 
-body {
-    background: #000000;
-    color: var(--ink);
-    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-body > section {
-    position: relative;
-    width: var(--fmt-w);
-    height: var(--fmt-h);
-    min-height: var(--fmt-h);
-    /* centraliza o quadro: em tela que não é 16:9 a sobra vira
-       faixa preta acima e abaixo, nunca o slide seguinte */
-    margin: max(0px, calc((100dvh - var(--fmt-h)) / 2)) 0;
-    scroll-margin-top: max(0px, calc((100dvh - var(--fmt-h)) / 2));
-    overflow: hidden;
-    background: var(--bg);
-    scroll-snap-align: start;
-    display: flex;
-    flex-direction: column;
-    isolation: isolate;
-}
+        .replay-btn:hover {
+            background: var(--mira-icon-bg);
+            color: var(--mira-primary);
+            border-color: var(--mira-icon-border);
+        }
 
-/* DIRETIVA DA CAPA: o título do primeiro slide nunca quebra
-   deixando artigo ou preposição sozinho na linha de baixo. */
-body > section:first-of-type h1,
-body > section:first-of-type h2 { text-wrap: balance; }
+        .text-soft { color: var(--mira-text-soft); }
+        .text-softer { color: var(--mira-text-softer); }
 
-h1 { font-size: clamp(26px, 5.2vmin, 68px); line-height: 1.06; letter-spacing: -.02em; font-weight: 800; }
-h2 { font-size: clamp(20px, 3.8vmin, 42px); line-height: 1.15; letter-spacing: -.01em; font-weight: 800; text-wrap: balance; }
-p  { font-size: clamp(13px, 1.9vmin, 20px); line-height: 1.5; color: var(--muted); max-width: 780px; }
-.accent { color: var(--accent); }
+        @keyframes mira-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.06); opacity: 0.82; }
+        }
 
-/* ---------- capa e encerramento: texto centrado no quadro ---------- */
-.slide-centro {
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(10px, 2vmin, 18px);
-    padding: clamp(18px, 4vmin, 48px) clamp(16px, 4vw, 50px) clamp(32px, 5vmin, 52px);
-    text-align: center;
-    position: relative;
-    z-index: 10;
-}
-.slide-centro .marca {
-    font-size: clamp(10px, 1.3vmin, 12px);
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--mira-text-softer);
-}
+        @keyframes mira-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
 
-/* ---------- slide de conteúdo: título em cima, animação no resto ---------- */
-.slide-main {
-    width: 100%;
-    height: 100%;
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    padding: clamp(16px, 3.2vmin, 38px) clamp(14px, 3.5vw, 44px) clamp(28px, 4vmin, 38px);
-}
-.slide-main h2 {
-    flex: 0 0 auto;
-    margin-bottom: clamp(6px, 1.2vmin, 14px);
-    text-align: center;
-    position: relative;
-    z-index: 10;
-}
+        @keyframes scroll-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+        /* @MIRA:THEME:END */
 
-/* o palco ocupa toda a área disponível abaixo do título sem sobrepor nem cortar */
-.slide-main .anim-stage {
-    position: relative;
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    z-index: 1;
-}
-/* quando .anim-stage é fundo decorativo (ex: slide 8 de fechamento) */
-section > .anim-stage {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-.anim-stage svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-    overflow: visible;
-}
+        body > section:first-of-type h1,
+        body > section:first-of-type h2 { text-wrap: balance; }
 
-/* ---------- Grade responsiva do Slide 8 (Fechamento) ---------- */
-.fechamento-wrap {
-    max-width: 1080px;
-    margin: 0 auto;
-}
-.fechamento-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(10px, 1.8vmin, 18px);
-    text-align: left;
-    width: 100%;
-}
-.fechamento-card {
-    background: rgba(18, 18, 24, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
-    padding: clamp(12px, 2.2vmin, 22px) clamp(12px, 1.8vmin, 18px);
-    display: flex;
-    flex-direction: column;
-}
-.fechamento-card.destaque {
-    background: rgba(255, 144, 77, 0.08);
-    border: 1.5px solid var(--mira-primary);
-    box-shadow: 0 0 24px rgba(255, 144, 77, 0.16);
-}
-.fechamento-tag {
-    font-size: clamp(9px, 1.1vmin, 10.5px);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--mira-primary);
-    margin-bottom: 6px;
-}
-.fechamento-tag.alt {
-    color: var(--mira-accent-2);
-}
-.fechamento-card h3 {
-    font-size: clamp(13px, 1.8vmin, 16px);
-    font-weight: 800;
-    color: #ffffff;
-    margin-bottom: clamp(6px, 1vmin, 10px);
-    line-height: 1.25;
-}
-.fechamento-card p {
-    font-size: clamp(11px, 1.45vmin, 12.5px);
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.86);
-    margin: 0;
-}
-.fechamento-card.destaque p {
-    color: rgba(255, 255, 255, 0.94);
-}
+        #escala-stage, #nuvem-stage { height: clamp(380px, 56vh, 580px); }
+        #escala-stage + .border-t, #nuvem-stage + .border-t { padding-top: .25rem; margin-top: .25rem; margin-bottom: .25rem; }
 
-/* ---------- Responsividade para telas verticais, tablets e celulares ---------- */
-@media (max-aspect-ratio: 4/3), (max-width: 860px) {
-    body > section {
-        width: 100vw;
-        height: 100dvh;
-        min-height: 100dvh;
-        margin: 0;
-        scroll-margin-top: 0;
-    }
-    .slide-main {
-        padding: 18px 14px 32px;
-    }
-    .slide-centro {
-        padding: 20px 16px 36px;
-        overflow-y: auto;
-    }
-}
+        /* === CONTROLES DE SLIDE === */
+        html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #2e2e2e #0d0d0d; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; background: #0d0d0d; }
+        ::-webkit-scrollbar-track { background: #0d0d0d; }
+        ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 999px; }
 
-@media (max-width: 760px), (max-aspect-ratio: 1/1) {
-    .fechamento-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .fechamento-card {
-        padding: 12px 14px;
-    }
-    h1 { font-size: clamp(24px, 6.5vw, 38px); }
-    h2 { font-size: clamp(18px, 4.8vw, 28px); }
-    p  { font-size: clamp(13px, 3.4vw, 16px); }
-}
+        #mira-progress, #reading-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+            background: linear-gradient(90deg, var(--mira-primary), var(--mira-accent-2), var(--mira-primary));
+            background-size: 200% 100%;
+            animation: mira-shimmer 2s linear infinite;
+            z-index: 9999; transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--mira-glow-strong);
+        }
 
-/* ============================================================
-   CONTROLES DE NAVEGAÇÃO FLUTUANTE ULTRA-FINOS (MIRA)
-   Discreto, bem fino e rente à borda inferior
-   ============================================================ */
-#mira-nav {
-    position: fixed;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5000;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 2px 10px;
-    height: 22px;
-    background: rgba(10, 10, 14, 0.70);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 9999px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.50);
-    pointer-events: auto;
-    transition: all 0.2s ease;
-    user-select: none;
-    -webkit-user-select: none;
-}
+        @keyframes mira-shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
 
-.nav-arrow {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 144, 77, 0.40);
-    background: rgba(255, 144, 77, 0.12);
-    color: var(--mira-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    outline: none;
-    padding: 0;
-}
+        #mira-next, #next-card {
+            position: fixed; bottom: 32px; right: 32px;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: var(--mira-primary); color: var(--mira-bg);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: none;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.3s ease; z-index: 9998;
+            box-shadow: 0 4px 20px var(--mira-glow-strong);
+        }
+        #mira-next.visible, #next-card.visible { opacity: 1; transform: translateY(0); }
+        #mira-next:hover, #next-card:hover { transform: translateY(-3px) scale(1.1); }
 
-.nav-arrow svg {
-    width: 10px;
-    height: 10px;
-}
+        .cta-breathe {
+            background: radial-gradient(ellipse at 50% 60%, var(--mira-glow-strong), transparent 65%);
+            animation: mira-pulse 4s ease-in-out infinite;
+        }
 
-.nav-arrow:hover {
-    background: var(--mira-primary);
-    color: #000000;
-    transform: scale(1.18);
-    box-shadow: 0 0 8px var(--mira-glow-strong);
-}
+        /* === QR CODE CARD (Slide 10) === */
+        .qr-card {
+            --qr-modules: 29;
+            --qr-card-size: min(34vh, 260px);
+            --qr-quiet: calc(4 * var(--qr-card-size) / (var(--qr-modules) + 8));
+            position: relative;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: var(--qr-quiet);
+            width: var(--qr-card-size);
+            animation: qr-glow 3s ease-in-out infinite;
+        }
+        .qr-card svg { display: block; width: 100%; height: auto; }
+        @keyframes qr-glow {
+            0%, 100% { box-shadow: 0 0 25px rgba(77, 163, 255,0.25), 0 0 60px rgba(77, 163, 255,0.10); }
+            50%      { box-shadow: 0 0 45px rgba(77, 163, 255,0.55), 0 0 110px rgba(77, 163, 255,0.25); }
+        }
+        .qr-corner { position: absolute; width: 26px; height: 26px; border: 3px solid var(--mira-primary); animation: qr-breathe 3s ease-in-out infinite; }
+        .qr-corner.tl { top:-10px; left:-10px; border-right:none; border-bottom:none; border-radius:10px 0 0 0; --dx:-5px; --dy:-5px; }
+        .qr-corner.tr { top:-10px; right:-10px; border-left:none; border-bottom:none; border-radius:0 10px 0 0; --dx:5px; --dy:-5px; }
+        .qr-corner.bl { bottom:-10px; left:-10px; border-right:none; border-top:none; border-radius:0 0 0 10px; --dx:-5px; --dy:5px; }
+        .qr-corner.br { bottom:-10px; right:-10px; border-left:none; border-top:none; border-radius:0 0 10px 0; --dx:5px; --dy:5px; }
+        @keyframes qr-breathe {
+            0%, 100% { transform: translate(0,0); opacity: 0.6; }
+            50%      { transform: translate(var(--dx), var(--dy)); opacity: 1; }
+        }
 
-.nav-arrow:active {
-    transform: scale(0.9);
-}
+        /* @MIRA:RESPONSIVE:START */
+        html, body { max-width: 100%; overflow-x: hidden; }
+        img, svg, video, canvas, iframe, table, pre { max-width: 100%; }
 
-.nav-arrow.disabled,
-.nav-arrow:disabled {
-    opacity: 0.15;
-    cursor: default;
-    pointer-events: none;
-    box-shadow: none;
-    transform: none;
-}
+        @media (max-width: 640px) {
+          .text-9xl { font-size: clamp(3rem, 12vw, 5rem)      !important; line-height: 1.05 !important; }
+          .text-8xl { font-size: clamp(2.75rem, 11vw, 4.5rem) !important; line-height: 1.06 !important; }
+          .text-7xl { font-size: clamp(2.25rem, 10vw, 3.75rem)!important; line-height: 1.08 !important; }
+          .text-6xl { font-size: clamp(2rem, 9vw, 3rem)       !important; line-height: 1.1  !important; }
+          .text-5xl { font-size: clamp(1.75rem, 8vw, 2.5rem)  !important; line-height: 1.12 !important; }
+          .text-4xl { font-size: clamp(1.5rem, 7vw, 2rem)     !important; line-height: 1.15 !important; }
+          .text-3xl { font-size: clamp(1.35rem, 6vw, 1.75rem) !important; line-height: 1.2  !important; }
+          .text-2xl { font-size: clamp(1.2rem, 5vw, 1.5rem)   !important; line-height: 1.25 !important; }
+          .text-xl  { font-size: clamp(1.05rem, 4.5vw, 1.25rem)!important; line-height: 1.3 !important; }
 
-.nav-msg-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+          h1, h2, h3 { overflow-wrap: break-word; }
 
-.nav-msg {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--mira-text-soft);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    opacity: 0.85;
-}
+          .p-12 { padding: 1.25rem !important; }
+          .p-10 { padding: 1.15rem !important; }
+          .p-8  { padding: 1.05rem !important; }
+          .px-12, .px-10 { padding-left: 1.15rem !important; padding-right: 1.15rem !important; }
+          .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+          .py-16 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
+          .gap-8 { gap: 1rem !important; }
+          .gap-10, .gap-12 { gap: 1.25rem !important; }
 
-.nav-msg-desktop { display: inline; }
-.nav-msg-mobile { display: none; }
+          .min-h-screen {
+            min-height: 100dvh !important;
+            height: auto !important;
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+          }
+          .min-h-screen.justify-center,
+          .min-h-screen.items-center { justify-content: flex-start !important; }
 
-@media (max-width: 640px), (pointer: coarse) {
-    #mira-nav {
-        bottom: max(4px, env(safe-area-inset-bottom));
-        padding: 1px 8px;
-        height: 20px;
-        gap: 6px;
-    }
-    .nav-arrow {
-        width: 15px;
-        height: 15px;
-    }
-    .nav-arrow svg {
-        width: 9px;
-        height: 9px;
-    }
-    .nav-msg {
-        font-size: 9px;
-    }
-    .nav-msg-desktop { display: none; }
-    .nav-msg-mobile { display: inline; }
-}
-</style>
+          .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: 1fr !important; }
+
+          .anim-stage {
+            max-width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 16 / 9;
+            min-height: 0 !important;
+          }
+
+          table { font-size: 0.82rem !important; }
+          .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+
+          #mira-next, #next-card {
+            bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+            right: max(1rem, env(safe-area-inset-right)) !important;
+            width: 44px !important; height: 44px !important;
+          }
+        }
+        /* === CELULAR NA HORIZONTAL (tela baixa): compacta tudo para caber === */
+        @media (orientation: landscape) and (max-height: 520px) {
+          section.min-h-screen {
+            min-height: 100dvh !important;
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+            justify-content: center !important;
+          }
+          .p-8, .md\:p-10 { padding: 0.9rem !important; }
+          .p-6 { padding: 0.75rem !important; }
+          .p-4, .md\:p-4 { padding: 0.5rem !important; }
+          .mb-8, .mb-6 { margin-bottom: 0.6rem !important; }
+          .mb-10 { margin-bottom: 0.8rem !important; }
+          .mt-8, .mt-6 { margin-top: 0.6rem !important; }
+          .space-y-8 > * + * { margin-top: 0.7rem !important; }
+          .space-y-4 > * + * { margin-top: 0.45rem !important; }
+          .gap-6, .gap-8 { gap: 0.6rem !important; }
+
+          .text-7xl { font-size: 2.4rem !important; line-height: 1.08 !important; }
+          .text-6xl { font-size: 2.1rem !important; line-height: 1.1 !important; }
+          .text-5xl { font-size: 1.8rem !important; line-height: 1.12 !important; }
+          .text-4xl { font-size: 1.45rem !important; line-height: 1.15 !important; }
+          .text-3xl { font-size: 1.2rem !important; line-height: 1.2 !important; }
+          .text-2xl { font-size: 1.05rem !important; }
+          .text-xl  { font-size: 0.95rem !important; }
+          .text-lg  { font-size: 0.88rem !important; }
+          .text-base { font-size: 0.8rem !important; }
+          .text-sm  { font-size: 0.72rem !important; }
+
+          .icon-hero, .icon-container { width: 34px !important; height: 34px !important; }
+          .anim-stage, #escala-stage, #nuvem-stage {
+            height: 58dvh !important;
+            min-height: 0 !important;
+            aspect-ratio: auto !important;
+          }
+          .qr-card { --qr-card-size: min(48dvh, 200px) !important; }
+          .md\:scale-105 { transform: none !important; }
+          #mira-next { width: 38px !important; height: 38px !important; bottom: 12px !important; right: 12px !important; }
+        }
+
+        /* === AVISO "GIRE O CELULAR" (só em celular/tablet na vertical) === */
+        #mira-rotate {
+          display: none;
+          position: fixed; inset: 0; z-index: 100000;
+          background: var(--mira-bg);
+          color: var(--mira-text);
+          flex-direction: column; align-items: center; justify-content: center;
+          text-align: center; padding: 2rem; gap: 1.25rem;
+        }
+        #mira-rotate::before {
+          content: ""; position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(ellipse at 50% 45%, var(--mira-glow-strong), transparent 60%);
+          animation: mira-pulse 4s ease-in-out infinite;
+        }
+        #mira-rotate > * { position: relative; }
+        #mira-rotate .rotate-phone {
+          width: 64px; height: 110px; border-radius: 14px;
+          border: 4px solid var(--mira-primary);
+          box-shadow: 0 0 30px var(--mira-glow-strong);
+          animation: mira-rotate-phone 2.8s ease-in-out infinite;
+          position: relative;
+        }
+        #mira-rotate .rotate-phone::after {
+          content: ""; position: absolute; bottom: 7px; left: 50%;
+          width: 16px; height: 4px; margin-left: -8px; border-radius: 4px;
+          background: var(--mira-primary);
+        }
+        @keyframes mira-rotate-phone {
+          0%, 15%   { transform: rotate(0deg); }
+          45%, 70%  { transform: rotate(-90deg); }
+          100%      { transform: rotate(0deg); }
+        }
+        #mira-rotate h2 { font-size: 1.6rem; font-weight: 900; line-height: 1.2; }
+        #mira-rotate p { color: var(--mira-text-soft); font-size: 0.95rem; max-width: 300px; }
+        #mira-rotate .rotate-actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+        #mira-rotate button {
+          border-radius: 9999px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        }
+        #mira-rotate .rotate-primary { background: var(--mira-primary); color: var(--mira-bg); border: none; }
+        #mira-rotate .rotate-secondary { background: transparent; color: var(--mira-text-softer); border: 1px solid var(--mira-pill-border); }
+
+        @media (orientation: portrait) and (max-width: 900px) {
+          body:not(.rotate-dismissed) #mira-rotate { display: flex; }
+          body:not(.rotate-dismissed) { overflow: hidden; }
+        }
+        /* @MIRA:RESPONSIVE:END */
+    </style>
 </head>
+
 <body>
-
-<!-- === SLIDE 1 · CAPA === -->
-<section>
-    <div class="slide-centro">
-        <span class="marca">SAS Educação · Coordenação Pedagógica</span>
-        <h1>Programa SAS e a <span class="accent">BNCC Computação</span></h1>
-        <p>Análise das abordagens transversais e a articulação estruturante com o componente CHC (6º ao 8º ano)</p>
-    </div>
-</section>
-
-<!-- === SLIDE 2 · DIAGNÓSTICO: COLEÇÕES SAS === -->
-<section>
-    <div class="slide-main">
-        <h2>Potencial investigativo das <span class="accent">Coleções SAS</span></h2>
-        <div class="anim-stage"><svg id="stage-potencial" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 3 · SINERGIA DISCIPLINAR === -->
-<section>
-    <div class="slide-main">
-        <h2>Sinergia em <span class="accent">Português e Matemática</span></h2>
-        <div class="anim-stage"><svg id="stage-sinergia" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 4 · AMBIENTES E PLATAFORMAS SAS === -->
-<section>
-    <div class="slide-main">
-        <h2>Ambientes e plataformas do <span class="accent">Ecossistema SAS</span></h2>
-        <div class="anim-stage"><svg id="stage-ambientes" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 5 · TRÊS CAMADAS PEDAGÓGICAS === -->
-<section>
-    <div class="slide-main">
-        <h2>Três dimensões <span class="accent">distintas e complementares</span></h2>
-        <div class="anim-stage"><svg id="stage-camadas" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 6 · CHC COMO ESPINHA DORSAL === -->
-<section>
-    <div class="slide-main">
-        <h2>O componente CHC como <span class="accent">espinha dorsal</span></h2>
-        <div class="anim-stage"><svg id="stage-chc" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 7 · ENCAMINHAMENTOS EM 5 ETAPAS === -->
-<section>
-    <div class="slide-main">
-        <h2>Cinco etapas para o <span class="accent">alinhamento curricular</span></h2>
-        <div class="anim-stage"><svg id="stage-etapas" preserveAspectRatio="xMidYMid meet"></svg></div>
-    </div>
-</section>
-
-<!-- === SLIDE 8 · FECHAMENTO E MATRIZ DE ARTICULAÇÃO === -->
-<section style="position: relative;">
-    <div class="anim-stage" style="opacity: 0.35;"><svg id="stage-fechamento" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <div class="slide-centro" style="position: relative; z-index: 10; max-width: 1060px; margin: 0 auto; padding: 36px 20px; gap: 18px;">
-        <span class="marca">Síntese Estratégica · Coordenação Pedagógica</span>
-        <h2 style="margin-bottom: 4px;">Do potencial ao <span class="accent">planejamento intencional</span></h2>
-        
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; text-align: left; width: 100%;">
-            <!-- Card 1: Diagnóstico e Transição -->
-            <div style="background: rgba(18, 18, 24, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 22px 18px; display: flex; flex-direction: column;">
-                <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mira-accent-2); margin-bottom: 6px;">Diagnóstico & Transição</span>
-                <h3 style="font-size: 15px; font-weight: 800; color: #ffffff; margin-bottom: 10px; line-height: 1.25;">Da oportunidade à intencionalidade</h3>
-                <p style="font-size: 12px; line-height: 1.55; color: rgba(255, 255, 255, 0.82); margin: 0;">O material SAS apresenta uma base muito rica para o desenvolvimento transversal da Computação. Entretanto, precisamos passar de uma identificação de oportunidades para um planejamento intencional das aprendizagens.</p>
-            </div>
-
-            <!-- Card 2: Papel do CHC -->
-            <div style="background: rgba(18, 18, 24, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 22px 18px; display: flex; flex-direction: column;">
-                <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mira-primary); margin-bottom: 6px;">O Papel do CHC</span>
-                <h3 style="font-size: 15px; font-weight: 800; color: #ffffff; margin-bottom: 10px; line-height: 1.25;">Garantia de progressão</h3>
-                <p style="font-size: 12px; line-height: 1.55; color: rgba(255, 255, 255, 0.82); margin: 0;">O CHC pode contribuir justamente nesse processo, assegurando a progressão das habilidades específicas da BNCC Computação e articulando-as às experiências propostas nos demais componentes curriculares.</p>
-            </div>
-
-            <!-- Card 3: Próximo Passo Recomendado -->
-            <div style="background: rgba(255, 144, 77, 0.08); border: 1.5px solid var(--mira-primary); box-shadow: 0 0 24px rgba(255, 144, 77, 0.16); border-radius: 14px; padding: 22px 18px; display: flex; flex-direction: column;">
-                <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mira-primary); margin-bottom: 6px;">Próximo Passo Recomendado</span>
-                <h3 style="font-size: 15px; font-weight: 800; color: #ffffff; margin-bottom: 10px; line-height: 1.25;">Matriz de articulação por ano</h3>
-                <p style="font-size: 12px; line-height: 1.55; color: rgba(255, 255, 255, 0.92); margin: 0;">Como próximo passo, recomendo construir uma matriz de articulação entre SAS, BNCC Computação e CHC, indicando, para cada ano, o que já está previsto no material, o que pode ser desenvolvido transversalmente e o que precisará ser contemplado especificamente pelo CHC.</p>
-            </div>
+    <!-- Aviso para girar o celular (aparece só na vertical em telas pequenas) -->
+    <div id="mira-rotate" role="dialog" aria-live="polite">
+        <div class="rotate-phone" aria-hidden="true"></div>
+        <h2>Gire o celular <span class="primary-color italic">na horizontal</span></h2>
+        <p>Esta apresentação foi feita para a tela deitada. Vire o aparelho para ver os slides e as animações por inteiro.</p>
+        <div class="rotate-actions">
+            <button type="button" class="rotate-primary" id="rotate-fullscreen">Tela cheia na horizontal</button>
+            <button type="button" class="rotate-secondary" id="rotate-dismiss">Continuar na vertical</button>
         </div>
     </div>
-</section>
 
-<!-- === CONTROLES FLUTUANTES DE NAVEGAÇÃO === -->
-<nav id="mira-nav" aria-label="Navegação da apresentação">
-    <button id="nav-btn-prev" class="nav-arrow" aria-label="Slide anterior" title="Slide anterior (←)">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
+    <!-- Barra de Progresso e Botão Flutuante -->
+    <div id="mira-progress"></div>
+    <div id="reading-progress" style="display:none;"></div>
+    <button id="mira-next" aria-label="Próximo slide">
+        <i data-lucide="chevron-down" class="w-6 h-6" id="mira-next-icon"></i>
     </button>
-    <div class="nav-msg-box">
-        <span class="nav-msg nav-msg-desktop">(use as teclas do teclado para mudar o slide)</span>
-        <span class="nav-msg nav-msg-mobile">(toque na tela para mudar o slide)</span>
-    </div>
-    <button id="nav-btn-next" class="nav-arrow" aria-label="Próximo slide" title="Próximo slide (→)">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-    </button>
-</nav>
 
-<script>
-/* ==============================================================
-   ANIMAÇÕES D3.JS · MIRA DEFAULT
-   Seguem a Regra Zero: coreografia de entrada e loop contínuo.
-   Cores vinculadas às CSS variables do tema mira-dark.
-   ============================================================== */
-(function () {
-    'use strict';
+    <!-- ============ CAPA (ABERTURA) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6">
+        <div id="capa-stage" class="absolute inset-0 pointer-events-none"></div>
+        <div class="relative z-10 text-center max-w-4xl" data-aos="fade-up">
+            <p class="attribute-pill inline-block px-5 py-2 text-sm tracking-widest uppercase text-soft mb-8">
+                Guia Prático · Outubro de 2026 · Equipe na Nuvem
+            </p>
+            <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6">
+                Fim da escala 6x1:<br>
+                <span class="primary-color italic">como não deixar turno descoberto</span>
+            </h1>
+            <p class="text-xl text-soft max-w-2xl mx-auto mb-8">
+                Guia prático para adequar operações que funcionam sete dias por semana às novas regras da Emenda Constitucional 141/2026.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-2 mb-10">
+                <span class="attribute-pill px-4 py-1.5 text-xs uppercase tracking-wider text-soft">Estacionamentos</span>
+                <span class="attribute-pill px-4 py-1.5 text-xs uppercase tracking-wider text-soft">Varejo</span>
+                <span class="attribute-pill px-4 py-1.5 text-xs uppercase tracking-wider text-soft">Eventos</span>
+                <span class="attribute-pill px-4 py-1.5 text-xs uppercase tracking-wider text-soft">Logística</span>
+                <span class="attribute-pill px-4 py-1.5 text-xs uppercase tracking-wider text-soft">Facilities</span>
+            </div>
+            <button id="header-next-btn" type="button"
+                class="attribute-pill px-6 py-3 text-sm font-semibold inline-flex items-center gap-2 cursor-pointer"
+                style="animation: scroll-bounce 2.2s ease-in-out infinite;">
+                <span class="primary-color">Iniciar Apresentação</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 primary-color"></i>
+            </button>
+        </div>
+    </section>
 
-    function cor(nome, reserva) {
-        var v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
-        return v || reserva;
-    }
+    <!-- ============ SLIDE 1: CRONOGRAMA EC 141/2026 (card_timeline) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="glass-card rounded-xl p-8 w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+                <div class="flex items-center">
+                    <div class="icon-container"><i data-lucide="calendar-clock" class="primary-color"></i></div>
+                    <div class="w-10 h-1 primary-bg ml-4 mr-4"></div>
+                    <div>
+                        <span class="text-xs uppercase tracking-widest primary-color font-bold">1 · O Que Muda e Quando</span>
+                        <h3 class="text-3xl md:text-4xl font-bold">A escala 6x1 acaba em <span class="primary-color italic">dezembro de 2026</span></h3>
+                    </div>
+                </div>
+            </div>
 
-    var COR = {
-        marca: cor('--mira-primary', '#FF904D'),
-        acento: cor('--mira-accent-2', '#FFC766'),
-        tinta: cor('--mira-text', '#ffffff'),
-        fundo: cor('--mira-bg', '#000000'),
-        suave: cor('--mira-text-soft', 'rgba(255, 255, 255, 0.70)'),
-        maisSuave: cor('--mira-text-softer', 'rgba(255, 255, 255, 0.45)'),
-        glow: cor('--mira-glow-soft', 'rgba(255, 144, 77, 0.18)'),
-        glowForte: cor('--mira-glow-strong', 'rgba(255, 144, 77, 0.35)'),
-        borda: cor('--mira-card-border', 'rgba(255, 255, 255, 0.12)'),
-        cardBg: cor('--mira-card-bg', 'rgba(255, 255, 255, 0.05)')
-    };
+            <p class="text-soft text-base mb-8 max-w-3xl">
+                A Emenda Constitucional 141/2026 (PEC 221/2019) garante dois dias de repouso semanal remunerado e reduz a jornada máxima em duas etapas, <strong class="text-white">sem redução de salário</strong>.
+            </p>
 
-    function reger(svgId, quadro) {
-        var svg = document.getElementById(svgId);
-        var slide = svg && svg.closest('section');
-        if (!slide || typeof IntersectionObserver !== 'function') {
-            d3.timer(function (ms) { quadro(ms); });
-            return;
-        }
-        var relogio = null, visivel = false;
-        d3.timer(function (ms) {
-            if (!visivel) { quadro(0); return; }
-            if (relogio === null) relogio = ms;
-            quadro(ms - relogio);
-        });
-        new IntersectionObserver(function (entradas) {
-            entradas.forEach(function (e) {
-                if (e.isIntersecting === visivel) return;
-                visivel = e.isIntersecting;
-                relogio = null;
+            <div class="space-y-8 relative" id="timeline-ec141">
+                <div class="absolute left-[19px] top-2 bottom-2 w-0.5 bg-white/15"></div>
+
+                <div class="relative pl-14 timeline-step transition-all duration-500">
+                    <div class="timeline-dot absolute left-0 top-1 w-10 h-10 rounded-full primary-bg flex items-center justify-center border-4 border-black">
+                        <span class="text-black font-black">1</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-white">16 de outubro de 2026 · Publicação no Diário Oficial</h4>
+                    <p class="text-soft text-base mt-1">Publicação da Emenda Constitucional 141/2026. Começa a correr o prazo legal de 60 dias para a primeira etapa de vigência.</p>
+                </div>
+
+                <div class="relative pl-14 timeline-step transition-all duration-500">
+                    <div class="timeline-dot absolute left-0 top-1 w-10 h-10 rounded-full primary-bg flex items-center justify-center border-4 border-black">
+                        <span class="text-black font-black">2</span>
+                    </div>
+                    <h4 class="text-xl font-bold primary-color">Meados de dezembro de 2026 · 60 dias após a publicação</h4>
+                    <p class="text-soft text-base mt-1">Dois dias de repouso semanal remunerado (um preferencialmente aos domingos) e <strong class="text-white">jornada máxima de 42 horas semanais</strong>. Cláusulas de acordos e convenções coletivas incompatíveis perdem efeito.</p>
+                </div>
+
+                <div class="relative pl-14 timeline-step transition-all duration-500">
+                    <div class="timeline-dot absolute left-0 top-1 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border-4 border-black">
+                        <span class="text-white font-black">3</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-white">Dezembro de 2027 · Segunda etapa</h4>
+                    <p class="text-soft text-base mt-1">Redução para <strong class="text-white">jornada máxima de 40 horas semanais</strong>, mantida a escala de cinco dias de trabalho e dois de descanso (5x2).</p>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-white/10 flex items-center justify-between flex-wrap gap-2 text-xs text-softer">
+                <span>Fontes: Agência Senado e Agência Brasil, outubro de 2026.</span>
+                <span>Este guia não substitui orientação jurídica. Confirme a vigência com seu jurídico.</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 2: PONTOS DE ATENÇÃO (card_grid) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="glass-card rounded-xl p-8 w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center mb-8">
+                <div class="icon-container"><i data-lucide="shield-alert" class="primary-color"></i></div>
+                <div class="w-10 h-1 primary-bg ml-4 mr-4"></div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest primary-color font-bold">Recortes Legais da EC 141/2026</span>
+                    <h3 class="text-3xl md:text-4xl font-bold">Três pontos de atenção <span class="primary-color italic">na transição</span></h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="grid-atencao">
+                <div class="atencao-card rounded-xl p-6 bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="icon-hero mb-4"><i data-lucide="file-signature" class="primary-color w-6 h-6"></i></div>
+                    <div class="text-3xl font-black primary-color mb-2">5x2 Flexível</div>
+                    <h4 class="text-lg font-bold text-white mb-2">Negociação Coletiva</h4>
+                    <p class="text-soft text-sm leading-relaxed">
+                        Acordo ou convenção coletiva pode prever regime compensatório diferente da 5x2, desde que respeite os novos limites constitucionais.
+                    </p>
+                </div>
+
+                <div class="atencao-card rounded-xl p-6 bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="icon-hero mb-4"><i data-lucide="landmark" class="primary-color w-6 h-6"></i></div>
+                    <div class="text-3xl font-black primary-color mb-2">12 Meses</div>
+                    <h4 class="text-lg font-bold text-white mb-2">Serviços ao Estado</h4>
+                    <p class="text-soft text-sm leading-relaxed">
+                        Empresas que prestam serviços contínuos à administração pública têm prazo estendido de 12 meses para adequar seus contratos e escalas.
+                    </p>
+                </div>
+
+                <div class="atencao-card rounded-xl p-6 bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="icon-hero mb-4"><i data-lucide="graduation-cap" class="primary-color w-6 h-6"></i></div>
+                    <div class="text-3xl font-black primary-color mb-2">2,5× RGPS</div>
+                    <h4 class="text-lg font-bold text-white mb-2">Superior + Alta Renda</h4>
+                    <p class="text-soft text-sm leading-relaxed">
+                        Empregados com diploma superior e salário a partir de 2,5 vezes o teto do RGPS ficam fora das regras de duração e controle, garantido o repouso semanal.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 3: A CONTA DA 5X2 (card_d3 / mira-animator) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 pt-3 pb-6">
+        <div class="w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="text-center mb-2">
+                <h2 class="text-3xl md:text-4xl font-bold mb-1">
+                    Operações 7 dias precisam de <span class="primary-color italic">20% mais gente</span>
+                </h2>
+                <p class="text-white/60 italic text-base md:text-lg">Na 6x1 cada pessoa cobre seis dias (1,17); na 5x2 cobre cinco (1,40).</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-2 md:p-4">
+                <div class="flex items-center justify-between mb-2 px-2">
+                    <div class="flex items-center gap-3">
+                        <div class="icon-container">
+                            <i data-lucide="calculator" class="w-5 h-5 primary-color"></i>
+                        </div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Simulação para 50 postos abertos 7 dias por semana</p>
+                            <p class="text-white/50 text-xs italic">De 59 pessoas na 6x1 para 70 pessoas na 5x2: surgem 11 turnos descobertos.</p>
+                        </div>
+                    </div>
+                    <button id="replay-escala" class="replay-btn" type="button">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i> Replay
+                    </button>
+                </div>
+
+                <!-- @MIRA:SIZE 3/10 -->
+                <div class="anim-stage" id="escala-stage">
+                    <svg id="escala-svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+
+                <div class="border-t border-white/10 pt-2 mt-2 mb-1">
+                    <p class="text-xs uppercase tracking-[3px] text-white/40 text-center mb-2">Impacto direto no dimensionamento</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-xs text-soft">Escala 6x1 (até dez/26)</p>
+                            <p class="text-sm font-bold primary-color">7 ÷ 6 = 1,17 (59 pessoas)</p>
+                        </div>
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-xs text-soft">Escala 5x2 (dez/26)</p>
+                            <p class="text-sm font-bold primary-color">7 ÷ 5 = 1,40 (70 pessoas)</p>
+                        </div>
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-xs text-soft">Salto por posto</p>
+                            <p class="text-sm font-bold text-white">+20% de efetivo</p>
+                        </div>
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-xs text-soft">Déficit em 50 postos</p>
+                            <p class="text-sm font-bold primary-color">+11 turnos a cobrir</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 4: CALCULE A SUA OPERAÇÃO (card_lista) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="glass-card rounded-xl p-8 w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center mb-6">
+                <div class="icon-container"><i data-lucide="sliders-horizontal" class="primary-color"></i></div>
+                <div class="w-10 h-1 primary-bg ml-4 mr-4"></div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest primary-color font-bold">2 · Dimensionamento Prático</span>
+                    <h3 class="text-3xl md:text-4xl font-bold text-white">Calcule o buraco <span class="primary-color italic">na sua operação</span></h3>
+                </div>
+            </div>
+
+            <p class="text-soft text-base mb-6">
+                Cálculo simplificado (uma pessoa por turno, arredondado para cima, sem contar férias e faltas). Veja o passo a passo aplicado a uma operação de <strong class="text-white">50 postos</strong>:
+            </p>
+
+            <ul class="space-y-4" id="calc-steps">
+                <li class="calc-item flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl font-black primary-color w-12 text-center">01</span>
+                        <div>
+                            <p class="text-white font-bold text-lg">Postos que funcionam sete dias por semana</p>
+                            <p class="text-soft text-sm">Unidades e turnos que abrem de segunda a domingo.</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl md:text-3xl font-black text-white px-4 py-2 rounded-lg bg-black/40 border border-white/10">50 postos</span>
+                </li>
+
+                <li class="calc-item flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl font-black primary-color w-12 text-center">02</span>
+                        <div>
+                            <p class="text-white font-bold text-lg">Pessoas necessárias na 5x2 (postos × 1,40)</p>
+                            <p class="text-soft text-sm">Cada titular cobre 5 dos 7 dias da semana (7 ÷ 5 = 1,40).</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl md:text-3xl font-black primary-color px-4 py-2 rounded-lg bg-black/40 border border-white/10">70 pessoas</span>
+                </li>
+
+                <li class="calc-item flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl font-black primary-color w-12 text-center">03</span>
+                        <div>
+                            <p class="text-white font-bold text-lg">Pessoas no quadro atual (postos × 1,17)</p>
+                            <p class="text-soft text-sm">Dimensionamento herdado da escala 6x1 (50 × 1,17 = 58,5 → 59).</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl md:text-3xl font-black text-white px-4 py-2 rounded-lg bg-black/40 border border-white/10">59 pessoas</span>
+                </li>
+
+                <li class="calc-item flex items-center justify-between p-4 rounded-xl bg-white/10 border border-[#4DA3FF]/50 transition-all duration-500">
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl font-black primary-color w-12 text-center">04</span>
+                        <div>
+                            <p class="text-white font-bold text-lg">Diferença: turnos descobertos a cobrir</p>
+                            <p class="text-soft text-sm">O espaço que exige decisão: contratar fixo, redistribuir ou completar sob demanda.</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl md:text-3xl font-black primary-color px-4 py-2 rounded-lg bg-black/60 border border-[#4DA3FF]">+11 pessoas</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 5: CHECKLIST DE ADEQUAÇÃO (card_progresso) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="glass-card rounded-xl p-8 w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center mb-6">
+                <div class="icon-container"><i data-lucide="check-square" class="primary-color"></i></div>
+                <div class="w-10 h-1 primary-bg ml-4 mr-4"></div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest primary-color font-bold">3 · Checklist de Adequação</span>
+                    <h3 class="text-3xl md:text-4xl font-bold">Oito pontos para revisar <span class="primary-color italic">antes de dezembro</span></h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-4" id="checklist-grid">
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">1. Mapear postos e turnos de 7 dias</span>
+                        <span class="primary-color font-bold text-xs">Etapa 1</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Listar unidades e funções que operam sábados, domingos e feriados.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">2. Revisar acordos e convenções coletivas</span>
+                        <span class="primary-color font-bold text-xs">Etapa 2</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Cláusulas incompatíveis com a nova regra perdem efeito na vigência.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">3. Redesenhar a escala 5x2</span>
+                        <span class="primary-color font-bold text-xs">Etapa 3</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Dois dias de repouso semanal, um preferencialmente aos domingos.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">4. Ajustar a jornada para até 42 horas</span>
+                        <span class="primary-color font-bold text-xs">Etapa 4</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Rever horários de entrada, saída e intervalos de cada função.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">5. Atualizar ponto e banco de horas</span>
+                        <span class="primary-color font-bold text-xs">Etapa 5</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Parametrizar o sistema de ponto e revisar saldos de banco de horas.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">6. Recalcular o dimensionamento por posto</span>
+                        <span class="primary-color font-bold text-xs">Etapa 6</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Aplicar a conta (postos × 1,40) como ponto de partida real.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">7. Definir cobertura dos turnos descobertos</span>
+                        <span class="primary-color font-bold text-xs">Etapa 7</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Escolher entre contratação fixa, redistribuição ou intermitentes.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="check-card p-3.5 rounded-xl bg-white/5 border border-white/10 transition-all duration-500">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm text-white">8. Comunicar o time e documentar</span>
+                        <span class="primary-color font-bold text-xs">Etapa 8</span>
+                    </div>
+                    <p class="text-xs text-soft mb-2">Avisar equipes, atualizar contratos, folha e registros no eSocial.</p>
+                    <div class="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full primary-bg progress-bar-fill" style="width: 0%; transition: width 1.6s ease-out;" data-width="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 6: CTA INTERMEDIÁRIO (card_cta) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+        <div class="cta-breathe absolute inset-0 pointer-events-none"></div>
+        <div class="glass-card rounded-2xl p-8 md:p-10 w-full max-w-5xl relative z-10 border border-[#4DA3FF]/30" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="w-full md:w-5/12 flex flex-col items-center text-center p-6 rounded-2xl bg-black/40 border border-white/10">
+                    <div class="icon-hero mb-4" style="width:72px;height:72px;border-radius:20px;animation:mira-float 3s ease-in-out infinite;">
+                        <i data-lucide="cloud-lightning" class="primary-color w-10 h-10"></i>
+                    </div>
+                    <p class="text-5xl font-black primary-color mb-2">+10 mil</p>
+                    <p class="text-sm text-soft mb-4">profissionais intermitentes prontos para cobrir turnos vagos</p>
+                    <div class="flex gap-2 flex-wrap justify-center">
+                        <span class="attribute-pill px-3 py-1 text-xs primary-color font-semibold">IA de Convocação</span>
+                        <span class="attribute-pill px-3 py-1 text-xs primary-color font-semibold">eSocial Automático</span>
+                        <span class="attribute-pill px-3 py-1 text-xs primary-color font-semibold">PIX no Dia</span>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-7/12 text-left">
+                    <span class="inline-block primary-bg text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+                        Operação Sem Turno Descoberto
+                    </span>
+                    <h3 class="text-3xl md:text-4xl font-black text-white mb-3 leading-tight">
+                        Não espere dezembro para <span class="primary-color italic">fechar a sua escala</span>
+                    </h3>
+                    <p class="text-soft mb-6 text-base">
+                        Cubra os dias e horários que a escala 5x2 deixa em aberto pagando apenas pelos turnos efetivamente trabalhados, 100% dentro da CLT.
+                    </p>
+
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 primary-color mr-3 mt-0.5 shrink-0"></i>
+                            <span class="text-white/90 text-sm"><strong>Custo sob demanda:</strong> sem inflar a folha permanente nos dias de menor movimento.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i data-lucide="shield-check" class="w-5 h-5 primary-color mr-3 mt-0.5 shrink-0"></i>
+                            <span class="text-white/90 text-sm"><strong>Segurança jurídica total:</strong> contrato escrito, eSocial e encargos gerados em cada convocação.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i data-lucide="zap" class="w-5 h-5 primary-color mr-3 mt-0.5 shrink-0"></i>
+                            <span class="text-white/90 text-sm"><strong>Zero processos trabalhistas:</strong> histórico comprovado em um ano inteiro de operação.</span>
+                        </li>
+                    </ul>
+
+                    <a href="https://equipenanuvem.com.br/" target="_blank" rel="noopener noreferrer"
+                        class="w-full md:w-auto px-8 py-4 primary-bg text-black font-bold rounded-xl hover:opacity-90 transition-all inline-flex items-center justify-center gap-2 shadow-lg">
+                        <i data-lucide="external-link" class="w-5 h-5"></i>
+                        Conhecer a Equipe na Nuvem
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 7: TRÊS CAMINHOS PARA FECHAR A ESCALA (card_tabela) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="glass-card rounded-xl p-8 w-full max-w-5xl overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center mb-6">
+                <div class="icon-container">
+                    <i data-lucide="git-fork" class="primary-color"></i>
+                </div>
+                <div class="w-10 h-1 primary-bg ml-4 mr-4"></div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest primary-color font-bold">4 · As Três Saídas</span>
+                    <h3 class="text-3xl md:text-4xl font-bold text-white">Três caminhos para <span class="primary-color italic">fechar a escala</span></h3>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-white/20">
+                            <th class="py-3 px-4 primary-color font-bold uppercase text-xs tracking-wider">Saída</th>
+                            <th class="py-3 px-4 primary-color font-bold uppercase text-xs tracking-wider">Custo</th>
+                            <th class="py-3 px-4 primary-color font-bold uppercase text-xs tracking-wider">Prazo</th>
+                            <th class="py-3 px-4 primary-color font-bold uppercase text-xs tracking-wider">Risco</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/10" id="tabela-saidas">
+                        <tr class="saida-row transition-all duration-500">
+                            <td class="py-4 px-4 text-white font-bold">Contratar fixo</td>
+                            <td class="py-4 px-4 text-soft text-sm">Folha permanente maior, inclusive nos dias de menor movimento</td>
+                            <td class="py-4 px-4 text-soft text-sm">Recrutamento e admissão</td>
+                            <td class="py-4 px-4">
+                                <span class="bg-white/10 text-white text-xs px-3 py-1 rounded-full border border-white/20">
+                                    Ociosidade fora do pico
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="saida-row transition-all duration-500">
+                            <td class="py-4 px-4 text-white font-bold">Ampliar a jornada do time atual</td>
+                            <td class="py-4 px-4 text-soft text-sm">Horas extras recorrentes</td>
+                            <td class="py-4 px-4 text-soft text-sm">Imediato</td>
+                            <td class="py-4 px-4">
+                                <span class="bg-white/10 text-white text-xs px-3 py-1 rounded-full border border-white/20">
+                                    Passivo trabalhista e desgaste
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="saida-row transition-all duration-500 bg-white/5">
+                            <td class="py-4 px-4 primary-color font-black">Completar com intermitentes</td>
+                            <td class="py-4 px-4 text-white text-sm font-medium">Só os turnos trabalhados</td>
+                            <td class="py-4 px-4 text-white text-sm font-medium">Convocação com 3 dias de antecedência</td>
+                            <td class="py-4 px-4">
+                                <span class="primary-bg text-black font-bold text-xs px-3 py-1 rounded-full">
+                                    Baixo (com contrato, eSocial e PIX corretos)
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                <p class="text-sm text-white font-bold mb-1">
+                    <i data-lucide="info" class="inline w-4 h-4 primary-color mr-1"></i> Quando o intermitente faz sentido:
+                </p>
+                <p class="text-xs text-soft">
+                    Para completar a escala nos dias e horários que a 5x2 deixa descobertos e para cobrir variações de demanda. Não é indicado para substituir funções permanentes do quadro fixo.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 8: O MODELO INTERMITENTE (card_destaques) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        <div class="w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="text-center mb-8">
+                <span class="text-xs uppercase tracking-widest primary-color font-bold">5 · O Modelo Intermitente (Art. 452-A da CLT)</span>
+                <h3 class="text-3xl md:text-4xl font-bold mt-1">Seis regras que a empresa <span class="primary-color italic">precisa cumprir</span></h3>
+                <p class="text-soft text-sm mt-2">Previsto na CLT desde 2017: o profissional é empregado registrado e trabalha quando convocado.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="clt-pillars">
+                <div class="clt-card glass-card rounded-2xl p-6 flex flex-col border-t-4 border-t-white/20 transition-all duration-500">
+                    <div class="icon-hero mb-4"><i data-lucide="file-text" class="w-6 h-6 primary-color"></i></div>
+                    <h4 class="text-lg font-bold mb-1">Formalização e Chamado</h4>
+                    <p class="text-softer text-xs mb-4">Regras 1 e 2 antes do turno</p>
+                    <ul class="text-left text-sm text-soft space-y-4 w-full">
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">1.</span>
+                            <span><strong class="text-white">Contrato escrito:</strong> valor da hora nunca inferior ao mínimo nem ao pago aos demais na mesma função.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">2.</span>
+                            <span><strong class="text-white">Convocação prévia:</strong> mínimo de 3 dias corridos antes; 1 dia útil para responder (silêncio = recusa).</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="clt-card glass-card rounded-2xl p-6 flex flex-col border-t-4 border-t-[#4DA3FF] relative transform md:scale-105 z-10 shadow-2xl transition-all duration-500">
+                    <div class="absolute -top-3 right-6 primary-bg text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Núcleo CLT
+                    </div>
+                    <div class="icon-hero mb-4"><i data-lucide="wallet" class="w-6 h-6 primary-color"></i></div>
+                    <h4 class="text-lg font-bold mb-1">Autonomia e Liquidação</h4>
+                    <p class="text-softer text-xs mb-4">Regras 3 e 4 na execução</p>
+                    <ul class="text-left text-sm text-soft space-y-4 w-full">
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">3.</span>
+                            <span><strong class="text-white">Liberdade de recusa:</strong> recusar uma convocação é direito legal e não descaracteriza o vínculo.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">4.</span>
+                            <span><strong class="text-white">Pagamento ao fim do período:</strong> remuneração, férias + 1/3, 13º proporcional, DSR e adicionais legais.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="clt-card glass-card rounded-2xl p-6 flex flex-col border-t-4 border-t-white/20 transition-all duration-500">
+                    <div class="icon-hero mb-4"><i data-lucide="shield-check" class="w-6 h-6 primary-color"></i></div>
+                    <h4 class="text-lg font-bold mb-1">Encargos e Governança</h4>
+                    <p class="text-softer text-xs mb-4">Regras 5 e 6 no fechamento</p>
+                    <ul class="text-left text-sm text-soft space-y-4 w-full">
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">5.</span>
+                            <span><strong class="text-white">Recolhimentos:</strong> apuração e recolhimento de INSS e FGTS sobre os valores pagos no período.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="primary-color font-black">6.</span>
+                            <span><strong class="text-white">Registro no eSocial:</strong> admissão, remuneração de cada convocação e encargos informados no sistema.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-center text-xs text-softer mt-6">
+                O risco do modelo está na operação manual: convocações sem registro, pagamentos atrasados e eSocial incompleto.
+            </p>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 9: COMO A EQUIPE NA NUVEM RESOLVE (card_d3 / mira-animator) ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 pt-3 pb-6">
+        <div class="w-full max-w-5xl" data-aos="fade-up" data-aos-delay="100">
+            <div class="text-center mb-2">
+                <h2 class="text-3xl md:text-4xl font-bold mb-1">
+                    Da convocação ao pagamento <span class="primary-color italic">em uma plataforma</span>
+                </h2>
+                <p class="text-white/60 italic text-base md:text-lg">A Equipe na Nuvem automatiza cada etapa para cobrir o turno dentro da lei.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-2 md:p-4">
+                <div class="flex items-center justify-between mb-2 px-2">
+                    <div class="flex items-center gap-3">
+                        <div class="icon-container">
+                            <i data-lucide="cpu" class="w-5 h-5 primary-color"></i>
+                        </div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Ponte automatizada de 4 etapas: IA + Contrato/eSocial + PIX diário</p>
+                            <p class="text-white/50 text-xs italic">Sem retrabalho para o RH e com conformidade jurídica em cada turno.</p>
+                        </div>
+                    </div>
+                    <button id="replay-nuvem" class="replay-btn" type="button">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i> Replay
+                    </button>
+                </div>
+
+                <!-- @MIRA:SIZE 3/10 -->
+                <div class="anim-stage" id="nuvem-stage">
+                    <svg id="nuvem-svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+
+                <div class="border-t border-white/10 pt-2 mt-2 mb-1">
+                    <p class="text-xs uppercase tracking-[3px] text-white/40 text-center mb-2">Resultados em operação</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-lg font-black primary-color">+10 mil</p>
+                            <p class="text-xs text-soft">profissionais intermitentes cadastrados</p>
+                        </div>
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-lg font-black primary-color">Zero</p>
+                            <p class="text-xs text-soft">processos trabalhistas em 1 ano de operação</p>
+                        </div>
+                        <div class="attribute-pill text-center p-2 rounded-xl">
+                            <p class="text-lg font-black primary-color">3 em 1</p>
+                            <p class="text-xs text-soft">IA, PIX diário e eSocial integrados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SLIDE 10: CHAMADA FINAL EQUIPE NA NUVEM + QR CODE ============ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 pt-3 pb-6 relative overflow-hidden">
+        <div class="cta-breathe absolute inset-0 pointer-events-none"></div>
+        <div class="w-full max-w-5xl relative z-10" data-aos="zoom-in" data-aos-delay="100">
+            <div class="text-center mb-6">
+                <p class="attribute-pill inline-block px-4 py-1.5 text-xs tracking-widest uppercase primary-color font-bold mb-3">
+                    Próximo Passo · Equipe na Nuvem
+                </p>
+                <h2 class="text-4xl md:text-6xl font-black mb-3">
+                    Escala completa. <span class="primary-color italic">Dentro da lei.</span>
+                </h2>
+                <p class="text-lg text-soft max-w-2xl mx-auto">
+                    Veja como a Equipe na Nuvem cobre os turnos que a escala 5x2 deixa descobertos na sua operação.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 border border-[#4DA3FF]/40">
+                <div class="w-full md:w-7/12 text-left space-y-5">
+                    <div class="flex items-center gap-3">
+                        <div class="icon-hero">
+                            <i data-lucide="cloud" class="primary-color w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-white">Equipe na Nuvem</h3>
+                            <p class="text-sm text-soft">Sua equipe operacional, no tempo certo, dentro da lei.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5 text-sm text-soft">
+                        <p class="flex items-center gap-2.5">
+                            <i data-lucide="check" class="w-4 h-4 primary-color shrink-0"></i>
+                            <span>Cobertura inteligente para <strong class="text-white">Estacionamentos, Varejo, Eventos, Logística e Facilities</strong>.</span>
+                        </p>
+                        <p class="flex items-center gap-2.5">
+                            <i data-lucide="check" class="w-4 h-4 primary-color shrink-0"></i>
+                            <span>Convocação por IA em base com <strong class="text-white">+10 mil profissionais</strong> cadastrados.</span>
+                        </p>
+                        <p class="flex items-center gap-2.5">
+                            <i data-lucide="check" class="w-4 h-4 primary-color shrink-0"></i>
+                            <span>Contrato intermitente, registros no <strong class="text-white">eSocial</strong> e pagamento via <strong class="text-white">PIX no mesmo dia</strong>.</span>
+                        </p>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap items-center gap-4">
+                        <a href="https://equipenanuvem.com.br/" target="_blank" rel="noopener noreferrer"
+                            class="px-8 py-4 primary-bg text-black font-black rounded-xl hover:opacity-90 transition-all inline-flex items-center gap-3 text-base shadow-lg">
+                            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                            Solicite uma demonstração
+                        </a>
+                        <a href="https://equipenanuvem.com.br/" target="_blank" rel="noopener noreferrer"
+                            class="attribute-pill px-5 py-4 text-sm font-bold text-white hover:text-[#4DA3FF] inline-flex items-center gap-2">
+                            <i data-lucide="globe" class="w-4 h-4 primary-color"></i>
+                            equipenanuvem.com.br
+                        </a>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-5/12 flex flex-col items-center justify-center">
+                    <div class="qr-card">
+                        <div class="qr-corner tl"></div>
+                        <div class="qr-corner tr"></div>
+                        <div class="qr-corner bl"></div>
+                        <div class="qr-corner br"></div>
+                        <!-- QR gerado localmente (pacote npm qrcode, ECC M) para https://equipenanuvem.com.br/ -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h29v29H0z"/><path stroke="#0a0a0a" d="M0 0.5h7m3 0h2m2 0h1m3 0h2m2 0h7M0 1.5h1m5 0h1m2 0h2m1 0h1m3 0h1m5 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m4 0h3m2 0h1m1 0h1m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h2m1 0h1m4 0h2m1 0h1m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h1m2 0h2m2 0h5m2 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 7.5h1m2 0h1m1 0h4m1 0h1M0 8.5h1m2 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 9.5h3m2 0h1m1 0h1m3 0h1m1 0h1m1 0h2m3 0h1m1 0h1m2 0h1m2 0h1M0 10.5h4m2 0h10m3 0h1m3 0h5M5 11.5h1m3 0h2m1 0h2m2 0h1m1 0h2m1 0h1m2 0h1m1 0h2M0 12.5h2m1 0h2m1 0h1m1 0h2m1 0h1m2 0h2m1 0h2m1 0h3m2 0h1m1 0h2M1 13.5h1m2 0h2m2 0h1m1 0h2m1 0h4m2 0h3M0 14.5h1m2 0h6m1 0h5m6 0h2m1 0h5M0 15.5h1m3 0h1m3 0h2m5 0h1m1 0h1m2 0h1m4 0h1m1 0h1M1 16.5h2m3 0h1m1 0h1m1 0h1m2 0h1m3 0h1m1 0h1m1 0h1m1 0h1m3 0h1M1 17.5h2m1 0h1m3 0h1m3 0h5m4 0h3m1 0h1m2 0h1M0 18.5h1m1 0h3m1 0h2m1 0h1m1 0h1m2 0h5m2 0h1m1 0h2m2 0h2M2 19.5h1m2 0h1m6 0h1m1 0h1m2 0h1m2 0h2m1 0h1m3 0h2M0 20.5h1m1 0h3m1 0h1m3 0h1m1 0h1m2 0h1m4 0h5m1 0h1M8 21.5h1m3 0h1m1 0h2m1 0h2m1 0h1m3 0h1m1 0h3M0 22.5h7m2 0h1m6 0h3m1 0h1m1 0h1m1 0h1m2 0h1M0 23.5h1m5 0h1m1 0h4m2 0h2m4 0h1m3 0h3M0 24.5h1m1 0h3m1 0h1m2 0h4m3 0h3m1 0h5m2 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m4 0h1m1 0h1m1 0h3m1 0h1M0 26.5h1m1 0h3m1 0h1m2 0h1m2 0h5m2 0h2m3 0h3m1 0h1M0 27.5h1m5 0h1m2 0h1m1 0h1m1 0h2m1 0h6m5 0h1M0 28.5h7m1 0h2m5 0h1m2 0h1m1 0h2m1 0h3m1 0h1"/></svg>
+                    </div>
+                    <p class="text-xs text-softer mt-4 uppercase tracking-widest">Escaneie para acessar</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        AOS.init({ duration: 800, once: true });
+        lucide.createIcons();
+
+        const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+        const PRIMARY = cssVar('--mira-primary') || '#4DA3FF';
+        const ACCENT2 = cssVar('--mira-accent-2') || '#6EE7F0';
+
+        // ===== CAPA: partículas orbitando em loop perpétuo =====
+        (function () {
+            const W = window.innerWidth || 1280, H = window.innerHeight || 720;
+            const svg = d3.select('#capa-stage').append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+            const cx = W / 2, cy = H / 2;
+            const particles = d3.range(28).map((_, i) => ({
+                r: 160 + (i % 7) * 45,
+                angle: (i / 28) * Math.PI * 2,
+                speed: 0.0018 + (i % 5) * 0.0007,
+                size: 1.8 + (i % 4) * 0.9
+            }));
+            const dots = svg.selectAll('circle').data(particles).join('circle')
+                .attr('r', d => d.size).attr('fill', PRIMARY).attr('opacity', 0.32);
+            d3.timer(() => {
+                dots.attr('cx', d => { d.angle += d.speed; return cx + Math.cos(d.angle) * d.r; })
+                    .attr('cy', d => cy + Math.sin(d.angle) * d.r * 0.58);
             });
-        }, { threshold: 0.6 }).observe(slide);
-    }
+        })();
 
-    function palco(svgId) {
-        var svg = d3.select('#' + svgId);
-        if (svg.empty()) return null;
-        var caixa = svg.node().closest('.anim-stage');
-        var secao = caixa && caixa.closest ? caixa.closest('section') : null;
-        var titulo = secao && secao.querySelector
-            ? secao.querySelector('.slide-main h2, .slide-main h1')
-            : null;
-        var RESPIRO = 18;
-        var F = { W: 960, H: 460, topo: 0, alturaUtil: 460 };
-        F.vy = function (k) { return F.topo + F.alturaUtil * k; };
-
-        function casar() {
-            var r = caixa.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
-            svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
-
-            F.topo = 0;
-            if (titulo && titulo.getBoundingClientRect && r.height > 0) {
-                var t = titulo.getBoundingClientRect();
-                var basePx = Math.max(0, (t.bottom || 0) - (r.top || 0));
-                F.topo = Math.round(F.H * basePx / r.height) + RESPIRO;
-                F.topo = Math.min(F.topo, Math.round(F.H * 0.40));
+        // ===== LOOPS INTERNOS DOS CARDS DE CONTEÚDO (Regra Zero) =====
+        (function () {
+            // Slide 1: Pulso sequencial nos marcos do cronograma
+            const steps = document.querySelectorAll('#timeline-ec141 .timeline-step');
+            if (steps.length) {
+                let idx = 0;
+                setInterval(() => {
+                    steps.forEach((el, i) => {
+                        el.style.transform = i === idx ? 'translateX(6px)' : 'none';
+                        const dot = el.querySelector('.timeline-dot');
+                        if (dot) dot.style.boxShadow = i === idx ? '0 0 18px var(--mira-primary)' : 'none';
+                    });
+                    idx = (idx + 1) % steps.length;
+                }, 2600);
             }
-            F.alturaUtil = F.H - F.topo;
-            if (caixa.style && caixa.style.setProperty) {
-                caixa.style.setProperty('--mira-titulo-h', F.topo + 'px');
-            }
-        }
-        casar();
-        window.addEventListener('resize', casar);
-        svg.selectAll('*').remove();
-        return { svg: svg, F: F };
-    }
 
-    /* -------------------------------------------------------------
-       SLIDE 2: POTENCIAL INVESTIGATIVO DAS COLEÇÕES SAS
-       ------------------------------------------------------------- */
-    function animPotencialSAS(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var cx = F.W / 2, cy = F.vy(0.52);
-
-        var defs = svg.append('defs');
-        var filter = defs.append('filter').attr('id', svgId + '-glow');
-        filter.append('feGaussianBlur').attr('stdDeviation', 6).attr('result', 'coloredBlur');
-        var merge = filter.append('feMerge');
-        merge.append('feMergeNode').attr('in', 'coloredBlur');
-        merge.append('feMergeNode').attr('in', 'SourceGraphic');
-
-        var raiz = svg.append('g');
-
-        var raios = [115, 185, 255];
-        raios.forEach(function (r, idx) {
-            raiz.append('circle')
-                .attr('cx', cx).attr('cy', cy).attr('r', r)
-                .attr('fill', 'none')
-                .attr('stroke', COR.borda)
-                .attr('stroke-width', 1.5)
-                .attr('stroke-dasharray', idx === 1 ? '4,4' : '2,6')
-                .attr('opacity', 0.5);
-        });
-
-        var ripple = raiz.append('circle')
-            .attr('cx', cx).attr('cy', cy).attr('r', 72)
-            .attr('fill', 'none')
-            .attr('stroke', COR.marca)
-            .attr('stroke-width', 2)
-            .attr('opacity', 0);
-
-        var satelitesInfo = [
-            { titulo: 'Investigação Científica', subtitulo: 'Curiosidade e busca ativa', anguloBase: 0 },
-            { titulo: 'Criatividade Digital', subtitulo: 'Produção e expressão', anguloBase: Math.PI * 0.5 },
-            { titulo: 'Resolução de Problemas', subtitulo: 'Lógica e estratégia', anguloBase: Math.PI },
-            { titulo: 'Projetos Interdisciplinares', subtitulo: 'Integração de áreas', anguloBase: Math.PI * 1.5 }
-        ];
-
-        var linhasGrupo = raiz.append('g');
-        var satelitesGrupo = raiz.append('g');
-
-        var satelitesEls = satelitesInfo.map(function (item) {
-            var g = satelitesGrupo.append('g');
-            var bg = g.append('rect')
-                .attr('width', 180).attr('height', 52)
-                .attr('x', -90).attr('y', -26)
-                .attr('rx', 12)
-                .attr('fill', 'rgba(18, 18, 24, 0.88)')
-                .attr('stroke', COR.borda)
-                .attr('stroke-width', 1.5);
-            g.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('y', -4)
-                .attr('fill', COR.acento)
-                .attr('font-size', '13px')
-                .attr('font-weight', '700')
-                .text(item.titulo);
-            g.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('y', 14)
-                .attr('fill', COR.suave)
-                .attr('font-size', '11px')
-                .text(item.subtitulo);
-            g.append('circle')
-                .attr('r', 5)
-                .attr('cx', 0).attr('cy', -26)
-                .attr('fill', COR.marca);
-            return { g: g, bg: bg, item: item };
-        });
-
-        var linhasEls = satelitesInfo.map(function () {
-            return linhasGrupo.append('line')
-                .attr('x1', cx).attr('y1', cy)
-                .attr('stroke', COR.borda)
-                .attr('stroke-width', 1.5)
-                .attr('stroke-dasharray', '3,3');
-        });
-
-        var particulasGrupo = raiz.append('g');
-        var particulas = [];
-        for (var i = 0; i < 16; i++) {
-            particulas.push({
-                el: particulasGrupo.append('circle').attr('r', 3).attr('fill', i % 2 === 0 ? COR.marca : COR.acento),
-                sateliteIdx: i % 4,
-                progresso: (i * 0.25) % 1
-            });
-        }
-
-        var nucleo = raiz.append('g');
-        nucleo.append('circle')
-            .attr('cx', cx).attr('cy', cy).attr('r', 78)
-            .attr('fill', 'rgba(255, 144, 77, 0.12)')
-            .attr('filter', 'url(#' + svgId + '-glow)');
-        nucleo.append('circle')
-            .attr('cx', cx).attr('cy', cy).attr('r', 72)
-            .attr('fill', 'rgba(20, 20, 26, 0.95)')
-            .attr('stroke', COR.marca)
-            .attr('stroke-width', 2.5);
-        nucleo.append('circle')
-            .attr('cx', cx).attr('cy', cy).attr('r', 65)
-            .attr('fill', 'none')
-            .attr('stroke', 'rgba(255, 255, 255, 0.08)')
-            .attr('stroke-width', 1.5)
-            .attr('stroke-dasharray', '3,3');
-        nucleo.append('text')
-            .attr('x', cx).attr('y', cy - 8)
-            .attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta)
-            .attr('font-size', '15px')
-            .attr('font-weight', '800')
-            .text('SAS Educação');
-        nucleo.append('text')
-            .attr('x', cx).attr('y', cy + 14)
-            .attr('text-anchor', 'middle')
-            .attr('fill', COR.acento)
-            .attr('font-size', '11px')
-            .attr('font-weight', '700')
-            .attr('letter-spacing', '0.08em')
-            .text('6º AO 8º ANO');
-
-        var CICLO = 16000;
-        reger(svgId, function (ms) {
-            var t = (ms % CICLO) / CICLO;
-            var anguloGiro = t * Math.PI * 2 * 0.35;
-
-            var rippleT = (ms % 3500) / 3500;
-            ripple.attr('r', 72 + rippleT * 180)
-                .attr('opacity', Math.max(0, (1 - rippleT) * 0.65));
-
-            var rOrbita = 205;
-            satelitesEls.forEach(function (sat, idx) {
-                var a = sat.item.anguloBase + anguloGiro;
-                var sx = cx + Math.cos(a) * (rOrbita + 20 * Math.sin(a * 2));
-                var sy = cy + Math.sin(a) * (rOrbita * 0.82);
-
-                sat.g.attr('transform', 'translate(' + sx + ',' + sy + ')');
-                linhasEls[idx].attr('x2', sx).attr('y2', sy);
-
-                var satPulse = Math.sin(ms * 0.003 + idx * 1.5) * 0.5 + 0.5;
-                sat.bg.attr('stroke', satPulse > 0.6 ? COR.marca : COR.borda)
-                    .attr('stroke-width', satPulse > 0.6 ? 2 : 1.2);
-            });
-
-            particulas.forEach(function (pt, idx) {
-                var prog = ((ms * 0.0003) + idx * 0.0625) % 1;
-                var sat = satelitesEls[pt.sateliteIdx];
-                var a = sat.item.anguloBase + anguloGiro;
-                var sx = cx + Math.cos(a) * (rOrbita + 20 * Math.sin(a * 2));
-                var sy = cy + Math.sin(a) * (rOrbita * 0.85);
-
-                var px = cx + (sx - cx) * prog;
-                var py = cy + (sy - cy) * prog;
-                pt.el.attr('cx', px).attr('cy', py)
-                    .attr('opacity', Math.sin(prog * Math.PI) * 0.85);
-            });
-        });
-    }
-
-    /* -------------------------------------------------------------
-       SLIDE 3: SINERGIA EM PORTUGUÊS E MATEMÁTICA
-       ------------------------------------------------------------- */
-    function animSinergia(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var xEsq = F.W * 0.17, xDir = F.W * 0.83;
-        var yPolo = F.vy(0.50);
-        var xCen = F.W * 0.50, yCen = F.vy(0.50);
-
-        var defs = svg.append('defs');
-        var grad = defs.append('linearGradient').attr('id', svgId + '-ponte');
-        grad.append('stop').attr('offset', '0%').attr('stop-color', COR.marca).attr('stop-opacity', 0.8);
-        grad.append('stop').attr('offset', '50%').attr('stop-color', COR.acento).attr('stop-opacity', 0.9);
-        grad.append('stop').attr('offset', '100%').attr('stop-color', COR.marca).attr('stop-opacity', 0.8);
-
-        var raiz = svg.append('g');
-
-        var pathEsq = raiz.append('path').attr('fill', 'none')
-            .attr('stroke', 'url(#' + svgId + '-ponte)')
-            .attr('stroke-width', 2.5).attr('stroke-dasharray', '6,4');
-        var pathDir = raiz.append('path').attr('fill', 'none')
-            .attr('stroke', 'url(#' + svgId + '-ponte)')
-            .attr('stroke-width', 2.5).attr('stroke-dasharray', '6,4');
-
-        // Polo Esquerdo: Língua Portuguesa
-        var poloE = raiz.append('g').attr('transform', 'translate(' + xEsq + ',' + yPolo + ')');
-        poloE.append('circle').attr('r', 85).attr('fill', 'rgba(255, 144, 77, 0.08)');
-        poloE.append('circle').attr('r', 78).attr('fill', 'rgba(16, 16, 22, 0.95)')
-            .attr('stroke', COR.marca).attr('stroke-width', 2.5);
-        poloE.append('circle').attr('r', 71).attr('fill', 'none')
-            .attr('stroke', 'rgba(255, 255, 255, 0.08)').attr('stroke-width', 1.5).attr('stroke-dasharray', '3,3');
-        poloE.append('text').attr('y', -14).attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta).attr('font-size', '14px').attr('font-weight', '800')
-            .text('Língua Portuguesa');
-        poloE.append('text').attr('y', 8).attr('text-anchor', 'middle')
-            .attr('fill', COR.acento).attr('font-size', '12px').attr('font-weight', '700')
-            .text('Seção Click');
-        poloE.append('text').attr('y', 26).attr('text-anchor', 'middle')
-            .attr('fill', COR.suave).attr('font-size', '10px').attr('font-weight', '600')
-            .text('Cultura & Mundo Digital');
-
-        var tagsEsq = [
-            { txt: 'Mídias Críticas', dy: -108 },
-            { txt: 'Ética Digital', dy: 108 }
-        ];
-        tagsEsq.forEach(function (tag) {
-            var g = poloE.append('g').attr('transform', 'translate(0,' + tag.dy + ')');
-            g.append('rect').attr('x', -55).attr('y', -12).attr('width', 110).attr('height', 24).attr('rx', 12)
-                .attr('fill', 'rgba(255, 255, 255, 0.06)').attr('stroke', COR.borda);
-            g.append('text').attr('text-anchor', 'middle').attr('y', 4)
-                .attr('fill', COR.suave).attr('font-size', '10px').text(tag.txt);
-        });
-
-        // Polo Direito: Matemática
-        var poloD = raiz.append('g').attr('transform', 'translate(' + xDir + ',' + yPolo + ')');
-        poloD.append('circle').attr('r', 85).attr('fill', 'rgba(255, 199, 102, 0.08)');
-        poloD.append('circle').attr('r', 78).attr('fill', 'rgba(16, 16, 22, 0.95)')
-            .attr('stroke', COR.acento).attr('stroke-width', 2.5);
-        poloD.append('circle').attr('r', 71).attr('fill', 'none')
-            .attr('stroke', 'rgba(255, 255, 255, 0.08)').attr('stroke-width', 1.5).attr('stroke-dasharray', '3,3');
-        poloD.append('text').attr('y', -14).attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta).attr('font-size', '14px').attr('font-weight', '800')
-            .text('Matemática');
-        poloD.append('text').attr('y', 8).attr('text-anchor', 'middle')
-            .attr('fill', COR.marca).attr('font-size', '12px').attr('font-weight', '700')
-            .text('Pensamento Comp.');
-        poloD.append('text').attr('y', 26).attr('text-anchor', 'middle')
-            .attr('fill', COR.suave).attr('font-size', '10px').attr('font-weight', '600')
-            .text('Algoritmos e Lógica');
-
-        var tagsDir = [
-            { txt: 'Padrões & Dados', dy: -108 },
-            { txt: 'Fluxogramas', dy: 108 }
-        ];
-        tagsDir.forEach(function (tag) {
-            var g = poloD.append('g').attr('transform', 'translate(0,' + tag.dy + ')');
-            g.append('rect').attr('x', -55).attr('y', -12).attr('width', 110).attr('height', 24).attr('rx', 12)
-                .attr('fill', 'rgba(255, 255, 255, 0.06)').attr('stroke', COR.borda);
-            g.append('text').attr('text-anchor', 'middle').attr('y', 4)
-                .attr('fill', COR.suave).attr('font-size', '10px').text(tag.txt);
-        });
-
-        // Centro: Nexus Integrador
-        var nexus = raiz.append('g').attr('transform', 'translate(' + xCen + ',' + yCen + ')');
-        var nexusPulse = nexus.append('circle').attr('r', 65)
-            .attr('fill', 'none').attr('stroke', COR.acento).attr('stroke-width', 2).attr('opacity', 0);
-        var nexusW = 270, nexusH = 86;
-        nexus.append('rect').attr('x', -nexusW / 2).attr('y', -nexusH / 2).attr('width', nexusW).attr('height', nexusH)
-            .attr('rx', 16).attr('fill', 'rgba(20, 20, 28, 0.95)')
-            .attr('stroke', COR.marca).attr('stroke-width', 2);
-        nexus.append('text').attr('y', -16).attr('text-anchor', 'middle')
-            .attr('fill', COR.acento).attr('font-size', '12px').attr('font-weight', '800')
-            .attr('letter-spacing', '0.05em')
-            .text('CONTEXTO REAL & PROJETOS');
-        nexus.append('text').attr('y', 6).attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta).attr('font-size', '11.5px').attr('font-weight', '600')
-            .text('Ciências · História · Geografia · Arte');
-        nexus.append('text').attr('y', 24).attr('text-anchor', 'middle')
-            .attr('fill', COR.suave).attr('font-size', '10px')
-            .text('Além do uso puramente instrumental');
-
-        var particulasC = [];
-        for (var i = 0; i < 18; i++) {
-            particulasC.push({
-                el: raiz.append('circle').attr('r', 3.5).attr('fill', i % 2 === 0 ? COR.marca : COR.acento),
-                lado: i % 2 === 0 ? 'esq' : 'dir',
-                offset: (i * 0.11) % 1
-            });
-        }
-
-        reger(svgId, function (ms) {
-            var t = (ms % 3000) / 3000;
-            nexusPulse.attr('r', 55 + t * 45).attr('opacity', (1 - t) * 0.6);
-
-            var curvoE = 'M ' + (xEsq + 78) + ' ' + yPolo +
-                ' Q ' + (xEsq + (xCen - xEsq) * 0.5) + ' ' + (yPolo - 22 * Math.sin(ms * 0.002)) + ' ' +
-                (xCen - 135) + ' ' + yCen;
-            var curvoD = 'M ' + (xDir - 78) + ' ' + yPolo +
-                ' Q ' + (xDir - (xDir - xCen) * 0.5) + ' ' + (yPolo + 22 * Math.sin(ms * 0.002)) + ' ' +
-                (xCen + 135) + ' ' + yCen;
-            pathEsq.attr('d', curvoE);
-            pathDir.attr('d', curvoD);
-
-            particulasC.forEach(function (pt) {
-                var prog = ((ms * 0.0004) + pt.offset) % 1;
-                var x, y;
-                if (pt.lado === 'esq') {
-                    x = (xEsq + 78) + ((xCen - 135) - (xEsq + 78)) * prog;
-                    y = yPolo - 22 * Math.sin(ms * 0.002) * 4 * prog * (1 - prog);
-                } else {
-                    x = (xDir - 78) - ((xDir - 78) - (xCen + 135)) * prog;
-                    y = yPolo + 22 * Math.sin(ms * 0.002) * 4 * prog * (1 - prog);
-                }
-                pt.el.attr('cx', x).attr('cy', y)
-                    .attr('opacity', Math.sin(prog * Math.PI));
-            });
-        });
-    }
-
-    ﻿    /* -------------------------------------------------------------
-       SLIDE 4: AMBIENTES E PLATAFORMAS SAS
-       Focos: Formação continuada de professores com BNCC Computação
-       Eureka!: Ambiente gamificado com exercícios adaptativos
-       Avaliações e Relatórios: Diagnóstico e acompanhamento
-       ------------------------------------------------------------- */
-    function animAmbientes(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var yCentro = F.vy(0.50);
-
-        var cards = [
-            {
-                id: 'focos',
-                x: F.W * 0.19,
-                badge: 'FORMAÇÃO DOCENTE',
-                nome: 'Focos',
-                funcao: 'Formação continuada',
-                cor: COR.marca
-            },
-            {
-                id: 'eureka',
-                x: F.W * 0.50,
-                badge: 'PRÁTICA & GAMIFICAÇÃO',
-                nome: 'Eureka!',
-                funcao: 'Exercícios adaptativos',
-                cor: COR.acento
-            },
-            {
-                id: 'avaliacoes',
-                x: F.W * 0.81,
-                badge: 'DIAGNÓSTICO & DADOS',
-                nome: 'Avaliações e Relatórios',
-                funcao: 'Acompanhamento',
-                cor: COR.marca
-            }
-        ];
-
-        var raiz = svg.append('g');
-
-        var defs = svg.append('defs');
-        var gradCircuito = defs.append('linearGradient').attr('id', svgId + '-circuito');
-        gradCircuito.append('stop').attr('offset', '0%').attr('stop-color', COR.marca).attr('stop-opacity', 0.8);
-        gradCircuito.append('stop').attr('offset', '50%').attr('stop-color', COR.acento).attr('stop-opacity', 0.9);
-        gradCircuito.append('stop').attr('offset', '100%').attr('stop-color', COR.marca).attr('stop-opacity', 0.8);
-
-        var caboCentral = raiz.append('path').attr('fill', 'none')
-            .attr('stroke', 'url(#' + svgId + '-circuito)')
-            .attr('stroke-width', 2.5).attr('stroke-dasharray', '6,4');
-
-        var cardW = 252, cardH = 224;
-
-        var cardsEls = cards.map(function (c) {
-            var g = raiz.append('g').attr('transform', 'translate(' + c.x + ',' + yCentro + ')');
-
-            var bg = g.append('rect')
-                .attr('x', -cardW / 2).attr('y', -cardH / 2)
-                .attr('width', cardW).attr('height', cardH)
-                .attr('rx', 16)
-                .attr('fill', 'rgba(18, 18, 24, 0.92)')
-                .attr('stroke', c.cor)
-                .attr('stroke-width', 1.8);
-
-            g.append('rect')
-                .attr('x', -cardW / 2 + 16).attr('y', -cardH / 2 + 1)
-                .attr('width', cardW - 32).attr('height', 2)
-                .attr('fill', c.cor)
-                .attr('opacity', 0.85);
-
-            var badgeG = g.append('g').attr('transform', 'translate(0,' + (-cardH / 2 + 24) + ')');
-            badgeG.append('rect')
-                .attr('x', -75).attr('y', -10).attr('width', 150).attr('height', 20).attr('rx', 10)
-                .attr('fill', 'rgba(255, 255, 255, 0.06)').attr('stroke', COR.borda);
-            badgeG.append('text')
-                .attr('text-anchor', 'middle').attr('y', 4)
-                .attr('fill', c.cor).attr('font-size', '9.5px').attr('font-weight', '700')
-                .attr('letter-spacing', '0.08em')
-                .text(c.badge);
-
-            g.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('y', -cardH / 2 + 64)
-                .attr('fill', COR.tinta)
-                .attr('font-size', c.nome.length > 15 ? '16px' : '22px')
-                .attr('font-weight', '800')
-                .text(c.nome);
-
-            g.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('y', -cardH / 2 + 88)
-                .attr('fill', COR.acento)
-                .attr('font-size', '12px')
-                .attr('font-weight', '700')
-                .text(c.funcao);
-
-            g.append('line')
-                .attr('x1', -cardW / 2 + 24).attr('y1', -cardH / 2 + 104)
-                .attr('x2', cardW / 2 - 24).attr('y2', -cardH / 2 + 104)
-                .attr('stroke', 'rgba(255, 255, 255, 0.08)').attr('stroke-width', 1);
-
-            var descLinhas = [];
-            if (c.id === 'focos') {
-                descLinhas = ['Formação continuada com foco nas', 'habilidades da BNCC Computação'];
-            } else if (c.id === 'eureka') {
-                descLinhas = ['Exercícios adaptativos gamificados', 'para o uso pedagógico da tecnologia'];
-            } else {
-                descLinhas = ['Diagnóstico pedagógico contínuo e', 'evidências reais de aprendizagem'];
+            // Slide 2: Spotlight suave nos 3 pontos de atenção
+            const atencaoCards = document.querySelectorAll('#grid-atencao .atencao-card');
+            if (atencaoCards.length) {
+                let idx2 = 0;
+                setInterval(() => {
+                    atencaoCards.forEach((el, i) => {
+                        el.style.borderColor = i === idx2 ? 'var(--mira-primary)' : 'rgba(255,255,255,0.10)';
+                        el.style.transform = i === idx2 ? 'translateY(-5px)' : 'none';
+                    });
+                    idx2 = (idx2 + 1) % atencaoCards.length;
+                }, 2800);
             }
 
-            g.append('text').attr('text-anchor', 'middle').attr('y', -cardH / 2 + 128)
-                .attr('fill', COR.suave).attr('font-size', '11px')
-                .text(descLinhas[0]);
-            g.append('text').attr('text-anchor', 'middle').attr('y', -cardH / 2 + 146)
-                .attr('fill', COR.tinta).attr('font-size', '11px').attr('font-weight', '600')
-                .text(descLinhas[1]);
-
-            var animG = g.append('g').attr('transform', 'translate(0,' + (cardH / 2 - 34) + ')');
-            var animPecas = {};
-
-            if (c.id === 'focos') {
-                animPecas.anel1 = animG.append('circle').attr('r', 10).attr('fill', 'none').attr('stroke', COR.marca).attr('stroke-width', 1.8);
-                animPecas.anel2 = animG.append('circle').attr('r', 18).attr('fill', 'none').attr('stroke', COR.acento).attr('stroke-width', 1.2).attr('stroke-dasharray', '3,3');
-                animPecas.core = animG.append('circle').attr('r', 5).attr('fill', COR.marca);
-            } else if (c.id === 'eureka') {
-                animPecas.engrenagem = animG.append('g');
-                for (var d = 0; d < 6; d++) {
-                    animPecas.engrenagem.append('circle')
-                        .attr('cx', Math.cos(d * Math.PI / 3) * 14)
-                        .attr('cy', Math.sin(d * Math.PI / 3) * 14)
-                        .attr('r', 2.5).attr('fill', COR.acento);
-                }
-                animPecas.engrenagem.append('circle').attr('r', 9).attr('fill', 'none').attr('stroke', COR.acento).attr('stroke-width', 1.8);
-                animPecas.core = animG.append('circle').attr('r', 4.5).attr('fill', COR.marca);
-            } else {
-                animPecas.barras = [-18, -6, 6, 18].map(function (bx, bi) {
-                    return animG.append('rect')
-                        .attr('x', bx - 3.5).attr('y', 0).attr('width', 7).attr('height', 14)
-                        .attr('rx', 3.5).attr('fill', bi % 2 === 0 ? COR.marca : COR.acento);
-                });
+            // Slide 4: Destaque progressivo nos 4 passos da calculadora
+            const calcItems = document.querySelectorAll('#calc-steps .calc-item');
+            if (calcItems.length) {
+                let idx4 = 0;
+                setInterval(() => {
+                    calcItems.forEach((el, i) => {
+                        el.style.boxShadow = i === idx4 ? '0 0 22px var(--mira-glow-strong)' : 'none';
+                    });
+                    idx4 = (idx4 + 1) % calcItems.length;
+                }, 2400);
             }
 
-            return { g: g, bg: bg, card: c, animPecas: animPecas };
-        });
-
-        var particulas = [];
-        for (var i = 0; i < 16; i++) {
-            particulas.push({
-                el: raiz.append('circle').attr('r', 3.5).attr('fill', i % 2 === 0 ? COR.marca : COR.acento),
-                offset: (i * 0.0625) % 1
-            });
-        }
-
-        var CICLO = 9000;
-        reger(svgId, function (ms) {
-            var ondaCabo = 'M ' + (cards[0].x + cardW / 2) + ' ' + yCentro +
-                ' Q ' + ((cards[0].x + cards[1].x) / 2) + ' ' + (yCentro + 26 * Math.sin(ms * 0.002)) + ' ' +
-                (cards[1].x - cardW / 2) + ' ' + yCentro +
-                ' M ' + (cards[1].x + cardW / 2) + ' ' + yCentro +
-                ' Q ' + ((cards[1].x + cards[2].x) / 2) + ' ' + (yCentro - 26 * Math.sin(ms * 0.002)) + ' ' +
-                (cards[2].x - cardW / 2) + ' ' + yCentro;
-            caboCentral.attr('d', ondaCabo);
-
-            var tFocos = (ms % 2500) / 2500;
-            cardsEls[0].animPecas.anel1.attr('r', 8 + tFocos * 14).attr('opacity', 1 - tFocos);
-            cardsEls[0].animPecas.anel2.attr('transform', 'rotate(' + (ms * 0.06) + ')');
-
-            cardsEls[1].animPecas.engrenagem.attr('transform', 'rotate(' + (ms * 0.08) + ')');
-
-            cardsEls[2].animPecas.barras.forEach(function (bar, bi) {
-                var h = 10 + Math.sin(ms * 0.005 + bi * 1.2) * 12;
-                bar.attr('y', -h).attr('height', h);
-            });
-
-            particulas.forEach(function (pt) {
-                var prog = ((ms * 0.00035) + pt.offset) % 1;
-                var x, y;
-                if (prog < 0.5) {
-                    var u = prog / 0.5;
-                    x = (cards[0].x + cardW / 2) + ((cards[1].x - cardW / 2) - (cards[0].x + cardW / 2)) * u;
-                    y = yCentro + 26 * Math.sin(ms * 0.002) * 4 * u * (1 - u);
-                } else {
-                    var u = (prog - 0.5) / 0.5;
-                    x = (cards[1].x + cardW / 2) + ((cards[2].x - cardW / 2) - (cards[1].x + cardW / 2)) * u;
-                    y = yCentro - 26 * Math.sin(ms * 0.002) * 4 * u * (1 - u);
-                }
-                pt.el.attr('cx', x).attr('cy', y)
-                    .attr('opacity', Math.sin(prog * Math.PI));
-            });
-        });
-    }
-/* -------------------------------------------------------------
-       SLIDE 5: TRÊS CAMADAS PEDAGÓGICAS
-       ------------------------------------------------------------- */
-    function animTresCamadas(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var cx = F.W * 0.28, cy = F.vy(0.52);
-
-        var raiz = svg.append('g');
-
-        // Três camadas concêntricas
-        var c1 = raiz.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 195)
-            .attr('fill', 'none').attr('stroke', 'rgba(255, 255, 255, 0.12)')
-            .attr('stroke-width', 2).attr('stroke-dasharray', '4,6');
-        var c2 = raiz.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 140)
-            .attr('fill', 'none').attr('stroke', 'rgba(255, 199, 102, 0.45)')
-            .attr('stroke-width', 2.5).attr('stroke-dasharray', '8,4');
-
-        var glowC3 = raiz.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 92)
-            .attr('fill', 'rgba(255, 144, 77, 0.10)');
-        var c3 = raiz.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 86)
-            .attr('fill', 'rgba(20, 20, 26, 0.95)')
-            .attr('stroke', COR.marca).attr('stroke-width', 3);
-        var c3Inner = raiz.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 79)
-            .attr('fill', 'none')
-            .attr('stroke', 'rgba(255, 255, 255, 0.08)').attr('stroke-width', 1.5).attr('stroke-dasharray', '3,3');
-
-        raiz.append('text').attr('x', cx).attr('y', cy - 8)
-            .attr('text-anchor', 'middle').attr('fill', COR.tinta)
-            .attr('font-size', '14px').attr('font-weight', '800')
-            .text('BNCC Computação');
-        raiz.append('text').attr('x', cx).attr('y', cy + 14)
-            .attr('text-anchor', 'middle').attr('fill', COR.acento)
-            .attr('font-size', '11px').attr('font-weight', '700')
-            .attr('letter-spacing', '0.08em')
-            .text('INTENCIONAL');
-
-        // Linha de radar rotativo
-        var radar = raiz.append('line')
-            .attr('x1', cx).attr('y1', cy)
-            .attr('stroke', COR.marca).attr('stroke-width', 2.5)
-            .attr('opacity', 0.85);
-
-        // Painéis explicativos à direita
-        var xCards = F.W * 0.53;
-        var cardsInfo = [
-            {
-                num: '1',
-                titulo: 'Uso Instrumental (Recurso)',
-                desc: 'Utilização de ferramentas e softwares digitais. Necessário, porém insuficiente para desenvolver as competências computacionais.',
-                y: F.vy(0.22),
-                cor: COR.suave
-            },
-            {
-                num: '2',
-                titulo: 'Abordagem Transversal (Temas)',
-                desc: 'Reflexões sobre tecnologia e sociedade em debates e leituras. Traz contexto, mas não assegura progressão de código e lógica.',
-                y: F.vy(0.50),
-                cor: COR.acento
-            },
-            {
-                num: '3',
-                titulo: 'Desenvolvimento Intencional (BNCC)',
-                desc: 'Objetivos claros, habilidades mapeadas e evidências de aprendizagem verificáveis no Pensamento Computacional e Mundo Digital.',
-                y: F.vy(0.78),
-                cor: COR.marca,
-                destaque: true
-            }
-        ];
-
-        var cardsEls = cardsInfo.map(function (c) {
-            var g = raiz.append('g').attr('transform', 'translate(' + xCards + ',' + c.y + ')');
-            var bg = g.append('rect')
-                .attr('x', 0).attr('y', -31).attr('width', 390).attr('height', 62).attr('rx', 12)
-                .attr('fill', c.destaque ? 'rgba(255, 144, 77, 0.12)' : 'rgba(18, 18, 24, 0.85)')
-                .attr('stroke', c.destaque ? COR.marca : COR.borda)
-                .attr('stroke-width', c.destaque ? 2 : 1.2);
-            var circleNum = g.append('circle').attr('cx', 24).attr('cy', 0).attr('r', 14)
-                .attr('fill', c.destaque ? COR.marca : 'rgba(255,255,255,0.08)');
-            g.append('text').attr('x', 24).attr('y', 5).attr('text-anchor', 'middle')
-                .attr('fill', c.destaque ? COR.fundo : COR.tinta).attr('font-size', '12px').attr('font-weight', '800')
-                .text(c.num);
-            g.append('text').attr('x', 50).attr('y', -8)
-                .attr('fill', c.cor).attr('font-size', '12.5px').attr('font-weight', '700')
-                .text(c.titulo);
-            g.append('text').attr('x', 50).attr('y', 11)
-                .attr('fill', COR.suave).attr('font-size', '10px')
-                .text(c.desc.substring(0, 58) + '...');
-            return { g: g, bg: bg, info: c };
-        });
-
-        // Linhas conectoras entre camadas e cards
-        var linkLines = [
-            raiz.append('line').attr('stroke', COR.borda).attr('stroke-width', 1.5).attr('stroke-dasharray', '2,4'),
-            raiz.append('line').attr('stroke', COR.borda).attr('stroke-width', 1.5).attr('stroke-dasharray', '2,4'),
-            raiz.append('line').attr('stroke', COR.marca).attr('stroke-width', 2).attr('stroke-dasharray', '2,4')
-        ];
-
-        var CICLO = 8000;
-        reger(svgId, function (ms) {
-            var t = (ms % CICLO) / CICLO;
-            var angulo = t * Math.PI * 2;
-            var rx = cx + Math.cos(angulo) * 195;
-            var ry = cy + Math.sin(angulo) * 195;
-            radar.attr('x2', rx).attr('y2', ry);
-
-            var p3 = Math.sin(ms * 0.004) * 4;
-            c3.attr('r', 86 + p3);
-            glowC3.attr('r', 92 + p3);
-
-            linkLines[0].attr('x1', cx + 195).attr('y1', cy).attr('x2', xCards).attr('y2', cardsInfo[0].y);
-            linkLines[1].attr('x1', cx + 140).attr('y1', cy).attr('x2', xCards).attr('y2', cardsInfo[1].y);
-            linkLines[2].attr('x1', cx + (86 + p3)).attr('y1', cy).attr('x2', xCards).attr('y2', cardsInfo[2].y);
-        });
-    }
-
-    /* -------------------------------------------------------------
-       SLIDE 5: CHC COMO ESPINHA DORSAL
-       ------------------------------------------------------------- */
-    function animArticulacaoCHC(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var yTopo = F.vy(0.20);
-        var yPilar = F.vy(0.55);
-        var yBase = F.vy(0.85);
-
-        var raiz = svg.append('g');
-
-        var chcBar = raiz.append('g').attr('transform', 'translate(' + (F.W / 2) + ',' + yTopo + ')');
-        chcBar.append('rect')
-            .attr('x', -300).attr('y', -24).attr('width', 600).attr('height', 48).attr('rx', 14)
-            .attr('fill', 'rgba(255, 144, 77, 0.15)')
-            .attr('stroke', COR.marca).attr('stroke-width', 2.5);
-        chcBar.append('text').attr('y', -3).attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta).attr('font-size', '13px').attr('font-weight', '800')
-            .text('COMPONENTE CHC: COMPUTAÇÃO, HUMANIDADES E CRIATIVIDADE');
-        chcBar.append('text').attr('y', 14).attr('text-anchor', 'middle')
-            .attr('fill', COR.acento).attr('font-size', '10px').attr('font-weight', '600')
-            .text('Estrutura curricular que garante progressão, continuidade e intencionalidade');
-
-        var pilares = [
-            { x: F.W * 0.22, titulo: 'Pensamento Comp.', sub: 'Algoritmos e Lógica', cod: 'Decomposição e Padrões' },
-            { x: F.W * 0.50, titulo: 'Mundo Digital', sub: 'Redes e Dispositivos', cod: 'Hardware e Segurança' },
-            { x: F.W * 0.78, titulo: 'Cultura Digital', sub: 'Uso Ético e Mídias', cod: 'Cidadania e Impactos' }
-        ];
-
-        var pilaresEls = pilares.map(function (col) {
-            var g = raiz.append('g').attr('transform', 'translate(' + col.x + ',' + yPilar + ')');
-
-            g.append('rect').attr('x', -70).attr('y', -55).attr('width', 140).attr('height', 110)
-                .attr('rx', 12).attr('fill', 'rgba(16, 16, 22, 0.90)')
-                .attr('stroke', COR.borda).attr('stroke-width', 1.5);
-            g.append('text').attr('y', -24).attr('text-anchor', 'middle')
-                .attr('fill', COR.acento).attr('font-size', '12px').attr('font-weight', '700')
-                .text(col.titulo);
-            g.append('text').attr('y', -2).attr('text-anchor', 'middle')
-                .attr('fill', COR.tinta).attr('font-size', '11px').attr('font-weight', '600')
-                .text(col.sub);
-            g.append('text').attr('y', 20).attr('text-anchor', 'middle')
-                .attr('fill', COR.suave).attr('font-size', '9px')
-                .text(col.cod);
-
-            raiz.append('line')
-                .attr('x1', col.x).attr('y1', yTopo + 24)
-                .attr('x2', col.x).attr('y2', yPilar - 55)
-                .attr('stroke', COR.marca).attr('stroke-width', 2);
-
-            raiz.append('line')
-                .attr('x1', col.x).attr('y1', yPilar + 55)
-                .attr('x2', col.x).attr('y2', yBase - 22)
-                .attr('stroke', COR.acento).attr('stroke-width', 2);
-
-            return { g: g, col: col };
-        });
-
-        var baseBar = raiz.append('g').attr('transform', 'translate(' + (F.W / 2) + ',' + yBase + ')');
-        baseBar.append('rect')
-            .attr('x', -300).attr('y', -22).attr('width', 600).attr('height', 44).attr('rx', 12)
-            .attr('fill', 'rgba(255, 255, 255, 0.05)')
-            .attr('stroke', COR.borda).attr('stroke-width', 1.5);
-        baseBar.append('text').attr('y', -2).attr('text-anchor', 'middle')
-            .attr('fill', COR.tinta).attr('font-size', '12px').attr('font-weight', '700')
-            .text('APLICAÇÕES E PROJETOS REAIS NAS DISCIPLINAS DO SAS');
-        baseBar.append('text').attr('y', 14).attr('text-anchor', 'middle')
-            .attr('fill', COR.suave).attr('font-size', '10px')
-            .text('Língua Portuguesa · Matemática · Ciências · História · Geografia · Arte');
-
-        var pulsos = [];
-        for (var i = 0; i < 9; i++) {
-            pulsos.push({
-                el: raiz.append('circle').attr('r', 4).attr('fill', COR.marca),
-                pilarIdx: i % 3,
-                prog: (i * 0.33) % 1
-            });
-        }
-
-        reger(svgId, function (ms) {
-            pulsos.forEach(function (p, idx) {
-                var prog = ((ms * 0.0005) + idx * 0.11) % 1;
-                var pilar = pilares[p.pilarIdx];
-                var yTotal = (yBase - 22) - (yTopo + 24);
-                var y = (yTopo + 24) + yTotal * prog;
-                p.el.attr('cx', pilar.x).attr('cy', y)
-                    .attr('opacity', Math.sin(prog * Math.PI));
-            });
-        });
-    }
-
-    /* -------------------------------------------------------------
-       SLIDE 6: CINCO ETAPAS PARA O ALINHAMENTO
-       ------------------------------------------------------------- */
-    function animCincoEtapas(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var yNivel = F.vy(0.50);
-
-        var etapas = [
-            { num: '1', titulo: 'Mapear SAS', desc: 'Identificar propostas existentes nos livros e guias' },
-            { num: '2', titulo: 'Cruzar BNCC', desc: 'Correspondência com as habilidades específicas' },
-            { num: '3', titulo: 'Diagnosticar', desc: 'Mapear lacunas e demandas de intervenção' },
-            { num: '4', titulo: 'Progressão', desc: 'Organizar a trilha curricular do 6º ao 8º ano' },
-            { num: '5', titulo: 'Projetos', desc: 'Definir projetos integradores sem sobreposição' }
-        ];
-
-        var xs = [F.W * 0.12, F.W * 0.31, F.W * 0.50, F.W * 0.69, F.W * 0.88];
-        var raiz = svg.append('g');
-
-        raiz.append('line')
-            .attr('x1', xs[0]).attr('y1', yNivel)
-            .attr('x2', xs[4]).attr('y2', yNivel)
-            .attr('stroke', COR.borda).attr('stroke-width', 3);
-
-        var linhaAtiva = raiz.append('line')
-            .attr('x1', xs[0]).attr('y1', yNivel)
-            .attr('x2', xs[0]).attr('y2', yNivel)
-            .attr('stroke', COR.marca).attr('stroke-width', 3);
-
-        var estacoesEls = etapas.map(function (et, idx) {
-            var x = xs[idx];
-            var g = raiz.append('g').attr('transform', 'translate(' + x + ',' + yNivel + ')');
-
-            var halo = g.append('circle').attr('r', 28)
-                .attr('fill', 'none').attr('stroke', COR.marca).attr('stroke-width', 2).attr('opacity', 0);
-
-            var circulo = g.append('circle').attr('r', 22)
-                .attr('fill', 'rgba(18, 18, 24, 0.95)')
-                .attr('stroke', COR.borda).attr('stroke-width', 2);
-
-            var textoNum = g.append('text').attr('y', 5).attr('text-anchor', 'middle')
-                .attr('fill', COR.tinta).attr('font-size', '14px').attr('font-weight', '800')
-                .text(et.num);
-
-            var dyCard = (idx % 2 === 0) ? -75 : 75;
-            var card = g.append('g').attr('transform', 'translate(0,' + dyCard + ')');
-
-            g.append('line').attr('x1', 0).attr('y1', idx % 2 === 0 ? -22 : 22)
-                .attr('x2', 0).attr('y2', idx % 2 === 0 ? -48 : 48)
-                .attr('stroke', COR.borda).attr('stroke-width', 1.5).attr('stroke-dasharray', '2,2');
-
-            card.append('rect').attr('x', -70).attr('y', -24).attr('width', 140).attr('height', 48)
-                .attr('rx', 10).attr('fill', 'rgba(16, 16, 22, 0.90)')
-                .attr('stroke', COR.borda).attr('stroke-width', 1.2);
-            card.append('text').attr('y', -5).attr('text-anchor', 'middle')
-                .attr('fill', COR.acento).attr('font-size', '12px').attr('font-weight', '700')
-                .text(et.titulo);
-            card.append('text').attr('y', 13).attr('text-anchor', 'middle')
-                .attr('fill', COR.suave).attr('font-size', '9px')
-                .text(et.desc.substring(0, 24) + '...');
-
-            return { g: g, circulo: circulo, halo: halo, textoNum: textoNum, x: x };
-        });
-
-        var CICLO = 7500;
-        reger(svgId, function (ms) {
-            var t = (ms % CICLO) / CICLO;
-            var xAtual = xs[0] + (xs[4] - xs[0]) * t;
-            linhaAtiva.attr('x2', xAtual);
-
-            estacoesEls.forEach(function (est, idx) {
-                var dist = Math.abs(xAtual - est.x);
-                var ativa = dist < 35;
-                if (ativa) {
-                    est.circulo.attr('stroke', COR.marca).attr('fill', 'rgba(255, 144, 77, 0.35)');
-                    est.halo.attr('opacity', 0.8).attr('r', 24 + (1 - dist / 35) * 14);
-                    est.textoNum.attr('fill', COR.tinta);
-                } else if (xAtual > est.x) {
-                    est.circulo.attr('stroke', COR.acento).attr('fill', 'rgba(18, 18, 24, 0.95)');
-                    est.halo.attr('opacity', 0);
-                    est.textoNum.attr('fill', COR.acento);
-                } else {
-                    est.circulo.attr('stroke', COR.borda).attr('fill', 'rgba(18, 18, 24, 0.95)');
-                    est.halo.attr('opacity', 0);
-                    est.textoNum.attr('fill', COR.suave);
-                }
-            });
-        });
-    }
-
-
-    /* -------------------------------------------------------------
-       SLIDE 8: FECHAMENTO E MATRIZ DE ARTICULAÇÃO
-       Matriz sutil em background com nós em pulso contínuo e
-       feixes luminosos conectando a rede pedagógica.
-       ------------------------------------------------------------- */
-    function animFechamento(svgId) {
-        var p = palco(svgId); if (!p) return;
-        var svg = p.svg, F = p.F;
-        var raiz = svg.append('g');
-
-        var nos = [];
-        var colunas = 7, linhas = 4;
-        for (var c = 0; c < colunas; c++) {
-            for (var l = 0; l < linhas; l++) {
-                nos.push({
-                    x: F.W * (0.08 + 0.84 * (c / (colunas - 1))),
-                    y: F.vy(0.10 + 0.80 * (l / (linhas - 1))),
-                    c: c,
-                    l: l
-                });
-            }
-        }
-
-        var linhasG = raiz.append('g');
-        nos.forEach(function (n1, i) {
-            nos.forEach(function (n2, j) {
-                if (j > i) {
-                    var dc = Math.abs(n1.c - n2.c);
-                    var dl = Math.abs(n1.l - n2.l);
-                    if ((dc === 1 && dl === 0) || (dc === 0 && dl === 1)) {
-                        linhasG.append('line')
-                            .attr('x1', n1.x).attr('y1', n1.y)
-                            .attr('x2', n2.x).attr('y2', n2.y)
-                            .attr('stroke', 'rgba(255, 255, 255, 0.07)')
-                            .attr('stroke-width', 1);
+            // Slide 5: Animação das barras de progresso + varredura do checklist
+            const bars = document.querySelectorAll('.progress-bar-fill');
+            const io = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        bars.forEach((b, i) => {
+                            setTimeout(() => { b.style.width = (b.getAttribute('data-width') || '100') + '%'; }, i * 120);
+                        });
                     }
+                });
+            }, { threshold: 0.25 });
+            const grid = document.getElementById('checklist-grid');
+            if (grid) io.observe(grid);
+
+            const checkCards = document.querySelectorAll('#checklist-grid .check-card');
+            if (checkCards.length) {
+                let idx5 = 0;
+                setInterval(() => {
+                    checkCards.forEach((el, i) => {
+                        el.style.borderColor = i === idx5 ? 'var(--mira-primary)' : 'rgba(255,255,255,0.10)';
+                    });
+                    idx5 = (idx5 + 1) % checkCards.length;
+                }, 1800);
+            }
+
+            // Slide 7: Pulso comparativo nas linhas da tabela
+            const rows = document.querySelectorAll('#tabela-saidas .saida-row');
+            if (rows.length) {
+                let idx7 = 2;
+                setInterval(() => {
+                    rows.forEach((r, i) => {
+                        r.style.background = i === idx7 ? 'rgba(77, 163, 255, 0.12)' : (i === 2 ? 'rgba(255,255,255,0.04)' : 'transparent');
+                    });
+                    idx7 = idx7 === 2 ? 0 : idx7 + 1;
+                }, 3000);
+            }
+
+            // Slide 8: Spotlight nos 3 blocos do Art. 452-A
+            const cltCards = document.querySelectorAll('#clt-pillars .clt-card');
+            if (cltCards.length) {
+                let idx8 = 1;
+                setInterval(() => {
+                    cltCards.forEach((c, i) => {
+                        c.style.boxShadow = i === idx8 ? '0 20px 45px var(--mira-glow-strong)' : '0 10px 30px var(--mira-glow-soft)';
+                    });
+                    idx8 = (idx8 + 1) % cltCards.length;
+                }, 2700);
+            }
+        })();
+
+        // ===== SLIDE 3 (D3): A CONTA DA 5X2: 7 ESTAÇÕES DA SEMANA E COBERTURA (+20%) =====
+        // Temperamento: sereno · ciclo 11 s · 5 beats · repouso 1,6 s
+        function animateEscala() {
+            clearInterval(window.__escalaPulse);
+            clearTimeout(window.__escalaTimer);
+            window.__escalaGen = (window.__escalaGen || 0) + 1;
+            const myGen = window.__escalaGen;
+
+            const svg = d3.select('#escala-svg');
+            svg.selectAll('*').remove();
+
+            const W = 1280, H = 720;
+            const dias = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+            const startX = 135, gapX = 148, dockY = 330, dockW = 122, dockH = 155;
+
+            // Fundo de cenário sutil: grade técnica portuária
+            const bgGroup = svg.append('g').attr('opacity', 0.18);
+            for (let x = 80; x < W - 80; x += 80) {
+                bgGroup.append('line').attr('x1', x).attr('y1', 60).attr('x2', x).attr('y2', H - 60)
+                    .attr('stroke', '#ffffff').attr('stroke-width', 0.6).attr('stroke-dasharray', '3,7');
+            }
+
+            // Painel Superior: Chave de Regime e Medidor de Efetivo (50 postos)
+            const topPanel = svg.append('g').attr('transform', 'translate(135, 55)');
+            topPanel.append('rect').attr('width', 1010).attr('height', 110).attr('rx', 16)
+                .attr('fill', 'rgba(255,255,255,0.04)').attr('stroke', 'rgba(255,255,255,0.14)').attr('stroke-width', 1.5);
+
+            const modeBadge = topPanel.append('g').attr('transform', 'translate(28, 25)');
+            const modeBg = modeBadge.append('rect').attr('width', 290).attr('height', 60).attr('rx', 12)
+                .attr('fill', 'rgba(255,255,255,0.08)').attr('stroke', PRIMARY).attr('stroke-width', 2);
+            const modeText = modeBadge.append('text').attr('x', 145).attr('y', 27).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 18).attr('font-weight', 800).text('REGIME 6x1 (ATÉ DEZ/26)');
+            const modeSub = modeBadge.append('text').attr('x', 145).attr('y', 48).attr('text-anchor', 'middle')
+                .attr('fill', PRIMARY).attr('font-size', 13).attr('font-weight', 600).text('1 pessoa cobre 6 de 7 dias');
+
+            // Medidores numéricos
+            const factorText = topPanel.append('text').attr('x', 500).attr('y', 50).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 28).attr('font-weight', 900).text('Fator: 7 ÷ 6 = 1,17');
+            const factorSub = topPanel.append('text').attr('x', 500).attr('y', 78).attr('text-anchor', 'middle')
+                .attr('fill', 'rgba(255,255,255,0.6)').attr('font-size', 14).text('Pessoas necessárias por posto 7d');
+
+            const totalBox = topPanel.append('g').attr('transform', 'translate(690, 18)');
+            totalBox.append('rect').attr('width', 292).attr('height', 74).attr('rx', 12)
+                .attr('fill', 'rgba(77, 163, 255,0.12)').attr('stroke', PRIMARY).attr('stroke-width', 1.5);
+            const totalNum = totalBox.append('text').attr('x', 146).attr('y', 36).attr('text-anchor', 'middle')
+                .attr('fill', PRIMARY).attr('font-size', 28).attr('font-weight', 900).text('59 PESSOAS');
+            const totalSub = totalBox.append('text').attr('x', 146).attr('y', 58).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 13).attr('font-weight', 600).text('Para operar 50 postos (50 × 1,17)');
+
+            // 7 Estações da Semana (Docas de Turno)
+            const docks = svg.selectAll('g.dock').data(dias).join('g')
+                .attr('class', 'dock')
+                .attr('transform', (d, i) => `translate(${startX + i * gapX}, ${dockY})`);
+
+            const dockRects = docks.append('rect')
+                .attr('width', dockW).attr('height', dockH).attr('rx', 14)
+                .attr('fill', 'rgba(255,255,255,0.05)')
+                .attr('stroke', PRIMARY).attr('stroke-width', 2);
+
+            docks.append('text')
+                .attr('x', dockW / 2).attr('y', 34).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 18).attr('font-weight', 800)
+                .text(d => d);
+
+            // Ícone flat de escudo/posto dentro de cada estação
+            docks.append('path')
+                .attr('d', 'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z')
+                .attr('transform', `translate(${dockW / 2 - 18}, 52) scale(1.5)`)
+                .attr('fill', PRIMARY)
+                .attr('class', 'dock-icon');
+
+            const dockStatus = docks.append('text')
+                .attr('x', dockW / 2).attr('y', 128).attr('text-anchor', 'middle')
+                .attr('fill', 'rgba(255,255,255,0.85)').attr('font-size', 12).attr('font-weight', 700)
+                .text((d, i) => i < 6 ? 'TITULAR' : 'FOLGA 6x1');
+
+            // Barra de Cobertura do Titular (6 dias na 6x1 -> retrai para 5 dias na 5x2)
+            const barY = 235;
+            const holderGroup = svg.append('g');
+            const holderBar = holderGroup.append('rect')
+                .attr('x', startX).attr('y', barY)
+                .attr('width', gapX * 5 + dockW).attr('height', 54).attr('rx', 12)
+                .attr('fill', PRIMARY).attr('opacity', 0.92);
+
+            const holderLabel = holderGroup.append('text')
+                .attr('x', startX + (gapX * 5 + dockW) / 2).attr('y', barY + 33)
+                .attr('text-anchor', 'middle').attr('fill', '#000000')
+                .attr('font-size', 17).attr('font-weight', 900)
+                .text('COBERTURA DO TITULAR: 6 DIAS POR SEMANA');
+
+            // Módulos de Reforço (para SÁB e DOM quando vira 5x2)
+            const reliefGroup = svg.append('g').attr('opacity', 0);
+            [5, 6].forEach(idx => {
+                const gx = startX + idx * gapX;
+                const g = reliefGroup.append('g').attr('class', `relief-${idx}`).attr('transform', `translate(${gx}, ${barY - 35})`);
+                g.append('rect').attr('width', dockW).attr('height', 54).attr('rx', 12)
+                    .attr('fill', ACCENT2).attr('stroke', '#ffffff').attr('stroke-width', 1.5);
+                g.append('text').attr('x', dockW / 2).attr('y', 24).attr('text-anchor', 'middle')
+                    .attr('fill', '#000000').attr('font-size', 12).attr('font-weight', 900).text('REFORÇO 5x2');
+                g.append('text').attr('x', dockW / 2).attr('y', 42).attr('text-anchor', 'middle')
+                    .attr('fill', '#000000').attr('font-size', 11).attr('font-weight', 700).text('+0,40 / posto');
+            });
+
+            // Faixa Inferior de Consequência / Diagnóstico
+            const bottomBanner = svg.append('g').attr('transform', 'translate(135, 535)');
+            const bannerRect = bottomBanner.append('rect').attr('width', 1010).attr('height', 96).attr('rx', 16)
+                .attr('fill', 'rgba(255,255,255,0.04)').attr('stroke', 'rgba(255,255,255,0.15)').attr('stroke-width', 1.5);
+            const bannerTitle = bottomBanner.append('text').attr('x', 505).attr('y', 40).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 22).attr('font-weight', 800)
+                .text('Estado Inicial (6x1): 1 folga semanal · 59 pessoas cobrem 50 postos');
+            const bannerSub = bottomBanner.append('text').attr('x', 505).attr('y', 70).attr('text-anchor', 'middle')
+                .attr('fill', 'rgba(255,255,255,0.65)').attr('font-size', 15)
+                .text('Em dezembro de 2026 a EC 141/2026 exige 2 dias de descanso remunerado (5x2).');
+
+            function runCycle() {
+                if (myGen !== window.__escalaGen) return;
+
+                // Beat 1 (0 - 2.2s): Estado 6x1 estabelecido
+                modeText.text('REGIME 6x1 (ATÉ DEZ/26)');
+                modeSub.text('1 pessoa cobre 6 de 7 dias');
+                factorText.text('Fator: 7 ÷ 6 = 1,17');
+                totalNum.text('59 PESSOAS').attr('fill', PRIMARY);
+                totalSub.text('Para operar 50 postos (50 × 1,17)');
+
+                holderBar.transition().duration(700).ease(d3.easeQuadInOut)
+                    .attr('width', gapX * 5 + dockW).attr('fill', PRIMARY);
+                holderLabel.transition().duration(700).ease(d3.easeQuadInOut)
+                    .attr('x', startX + (gapX * 5 + dockW) / 2)
+                    .text('COBERTURA DO TITULAR: 6 DIAS POR SEMANA');
+
+                reliefGroup.transition().duration(400).attr('opacity', 0);
+                dockRects.transition().duration(500)
+                    .attr('stroke', (d, i) => i < 6 ? PRIMARY : 'rgba(255,255,255,0.3)')
+                    .attr('fill', 'rgba(255,255,255,0.05)');
+                dockStatus.text((d, i) => i < 6 ? 'COBERTO' : '1 FOLGA');
+                bannerRect.transition().duration(500).attr('stroke', 'rgba(255,255,255,0.15)');
+                bannerTitle.text('Estado 6x1: cada titular cobre 6 dias · 59 pessoas para 50 postos').attr('fill', '#ffffff');
+                bannerSub.text('Acompanhe a mudança quando a escala vira 5x2 em dezembro de 2026...');
+
+                // Beat 2 (2.2s): Antecipação + Retração para 5 dias (EC 141/2026)
+                window.__escalaTimer = setTimeout(() => {
+                    if (myGen !== window.__escalaGen) return;
+                    modeText.text('NOVA REGRA 5x2 (EC 141/26)');
+                    modeSub.text('Titular passa a cobrir 5 dias');
+                    factorText.text('Fator: 7 ÷ 5 = 1,40 (+20%)');
+
+                    // Antecipação leve (+12px) antes de retrair para 5 docas
+                    holderBar.transition().duration(220).ease(d3.easeSineOut)
+                        .attr('width', gapX * 5 + dockW + 12)
+                        .transition().duration(900).ease(d3.easeQuadInOut)
+                        .attr('width', gapX * 4 + dockW);
+
+                    holderLabel.transition().delay(220).duration(900).ease(d3.easeQuadInOut)
+                        .attr('x', startX + (gapX * 4 + dockW) / 2)
+                        .text('TITULAR NA 5x2: 5 DIAS (SEG A SEX)');
+
+                    // Beat 3 (3.6s): Consequência / Contrafactual (SÁB e DOM descobertos!)
+                    window.__escalaTimer = setTimeout(() => {
+                        if (myGen !== window.__escalaGen) return;
+                        dockRects.filter((d, i) => i >= 5)
+                            .transition().duration(400)
+                            .attr('stroke', '#FF6464')
+                            .attr('fill', 'rgba(255, 100, 100, 0.16)');
+                        dockStatus.text((d, i) => i < 5 ? 'COBERTO' : 'DESCOBERTO!');
+                        totalNum.text('FALTAM 11!').attr('fill', '#FF6464');
+                        totalSub.text('59 atuais vs 70 necessários');
+                        bannerRect.transition().duration(400).attr('stroke', '#FF6464');
+                        bannerTitle.text('Alerta de Escala: 2 dias vagos por posto geram 11 turnos descobertos!')
+                            .attr('fill', '#FF6464');
+                        bannerSub.text('Sem reforço (+20% de efetivo), o turno de sábado e domingo fica descoberto.');
+
+                        // Beat 4 (6.2s): Acoplamento dos módulos de cobertura (70 pessoas = 59 + 11)
+                        window.__escalaTimer = setTimeout(() => {
+                            if (myGen !== window.__escalaGen) return;
+                            reliefGroup.selectAll('g').attr('transform', (d, i) => `translate(${startX + (i + 5) * gapX}, ${barY - 45})`);
+                            reliefGroup.transition().duration(750).ease(d3.easeQuadOut).attr('opacity', 1);
+                            reliefGroup.selectAll('g').transition().duration(750).ease(d3.easeQuadOut)
+                                .attr('transform', (d, i) => `translate(${startX + (i + 5) * gapX}, ${barY})`);
+
+                            setTimeout(() => {
+                                if (myGen !== window.__escalaGen) return;
+                                dockRects.filter((d, i) => i >= 5)
+                                    .transition().duration(500)
+                                    .attr('stroke', ACCENT2)
+                                    .attr('fill', 'rgba(255, 199, 102, 0.14)');
+                                dockStatus.text((d, i) => i < 5 ? 'TITULAR' : 'COBERTO (+11)');
+                                totalNum.text('70 PESSOAS').attr('fill', ACCENT2);
+                                totalSub.text('59 fixos + 11 turnos cobertos');
+                                bannerRect.transition().duration(500).attr('stroke', PRIMARY);
+                                bannerTitle.text('Escala 5x2 Fechada: 70 pessoas cobrem 100% dos 50 postos (7 ÷ 5 = 1,40)')
+                                    .attr('fill', PRIMARY);
+                                bannerSub.text('Decisão da operação: contratar fixo, ampliar jornada ou completar com intermitentes.');
+                            }, 320);
+
+                            // Beat 5 (8.8s - 11.0s): Repouso de leitura (2.2s) e reinício suave
+                            window.__escalaTimer = setTimeout(() => {
+                                if (myGen !== window.__escalaGen) return;
+                                runCycle();
+                            }, 4600);
+                        }, 2500);
+                    }, 1350);
+                }, 2200);
+            }
+
+            runCycle();
+        }
+
+        // ===== SLIDE 9 (D3): DA CONVOCAÇÃO AO PIX: PONTE DE 4 PORTÕES (EQUIPE NA NUVEM) =====
+        // Temperamento: sereno · ciclo 10 s · 5 beats · repouso 1,5 s
+        function animateNuvem() {
+            clearInterval(window.__nuvemPulse);
+            clearTimeout(window.__nuvemTimer);
+            window.__nuvemGen = (window.__nuvemGen || 0) + 1;
+            const myGen = window.__nuvemGen;
+
+            const svg = d3.select('#nuvem-svg');
+            svg.selectAll('*').remove();
+
+            const W = 1280, H = 720;
+            const stagesData = [
+                {
+                    num: '1',
+                    title: 'Você Indica o Turno',
+                    sub: 'Unidade, função, dia e hora',
+                    badge: 'REQUISIÇÃO',
+                    icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'
+                },
+                {
+                    num: '2',
+                    title: 'A IA Convoca',
+                    sub: 'Busca em +10 mil cadastrados',
+                    badge: 'IA +10 MIL',
+                    icon: 'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z'
+                },
+                {
+                    num: '3',
+                    title: 'Contrato e eSocial',
+                    sub: 'Gerados automaticamente',
+                    badge: '100% LEGAL',
+                    icon: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-3.06 16L7.4 14.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L10.94 18z'
+                },
+                {
+                    num: '4',
+                    title: 'PIX no Mesmo Dia',
+                    sub: 'Com proporcionais devidos',
+                    badge: 'PIX DIÁRIO',
+                    icon: 'M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z'
+                }
+            ];
+
+            const xs = [190, 490, 790, 1090];
+            const gateY = 310;
+
+            // Trilho de conexão entre os 4 portões
+            svg.append('line')
+                .attr('x1', xs[0]).attr('y1', gateY)
+                .attr('x2', xs[3]).attr('y2', gateY)
+                .attr('stroke', 'rgba(255,255,255,0.14)').attr('stroke-width', 6)
+                .attr('stroke-linecap', 'round');
+
+            const activeLine = svg.append('line')
+                .attr('x1', xs[0]).attr('y1', gateY)
+                .attr('x2', xs[0]).attr('y2', gateY)
+                .attr('stroke', PRIMARY).attr('stroke-width', 6)
+                .attr('stroke-linecap', 'round');
+
+            // Portões da Plataforma
+            const gates = svg.selectAll('g.gate').data(stagesData).join('g')
+                .attr('class', 'gate')
+                .attr('transform', (d, i) => `translate(${xs[i]}, ${gateY})`);
+
+            const gateBoxes = gates.append('rect')
+                .attr('x', -118).attr('y', -135)
+                .attr('width', 236).attr('height', 270).attr('rx', 20)
+                .attr('fill', 'rgba(20, 20, 20, 0.92)')
+                .attr('stroke', 'rgba(255,255,255,0.16)').attr('stroke-width', 2);
+
+            // Badge superior de cada portão
+            gates.append('rect')
+                .attr('x', -65).attr('y', -115).attr('width', 130).attr('height', 26).attr('rx', 13)
+                .attr('fill', 'rgba(77, 163, 255,0.15)');
+            gates.append('text')
+                .attr('x', 0).attr('y', -98).attr('text-anchor', 'middle')
+                .attr('fill', PRIMARY).attr('font-size', 11).attr('font-weight', 800)
+                .text(d => `ETAPA ${d.num} · ${d.badge}`);
+
+            // Círculo central do ícone
+            const gateCircles = gates.append('circle')
+                .attr('cx', 0).attr('cy', -25).attr('r', 42)
+                .attr('fill', 'rgba(255,255,255,0.05)')
+                .attr('stroke', PRIMARY).attr('stroke-width', 2);
+
+            gates.append('path')
+                .attr('d', d => d.icon)
+                .attr('transform', 'translate(-18, -43) scale(1.5)')
+                .attr('fill', PRIMARY);
+
+            gates.append('text')
+                .attr('x', 0).attr('y', 56).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 18).attr('font-weight', 800)
+                .text(d => d.title);
+
+            gates.append('text')
+                .attr('x', 0).attr('y', 82).attr('text-anchor', 'middle')
+                .attr('fill', 'rgba(255,255,255,0.65)').attr('font-size', 13)
+                .text(d => d.sub);
+
+            const gateCheck = gates.append('text')
+                .attr('x', 0).attr('y', 114).attr('text-anchor', 'middle')
+                .attr('fill', ACCENT2).attr('font-size', 12).attr('font-weight', 800)
+                .attr('opacity', 0.25)
+                .text('AGUARDANDO');
+
+            // Ator Focal: Cartão de Turno Verificado viajando pelos 4 portões
+            const token = svg.append('g').attr('transform', `translate(${xs[0]}, ${gateY - 195})`);
+            token.append('rect')
+                .attr('x', -88).attr('y', -22).attr('width', 176).attr('height', 44).attr('rx', 22)
+                .attr('fill', PRIMARY).style('filter', `drop-shadow(0 0 16px ${PRIMARY})`);
+            const tokenLabel = token.append('text')
+                .attr('x', 0).attr('y', 5).attr('text-anchor', 'middle')
+                .attr('fill', '#000000').attr('font-size', 13).attr('font-weight', 900)
+                .text('TURNO VAGO DETECTADO');
+
+            // Painel Inferior de Status Legal
+            const statusBar = svg.append('g').attr('transform', 'translate(140, 540)');
+            statusBar.append('rect').attr('width', 1000).attr('height', 95).attr('rx', 16)
+                .attr('fill', 'rgba(255,255,255,0.04)').attr('stroke', 'rgba(255,255,255,0.14)');
+            const statusMain = statusBar.append('text').attr('x', 500).attr('y', 40).attr('text-anchor', 'middle')
+                .attr('fill', '#ffffff').attr('font-size', 21).attr('font-weight', 800)
+                .text('1. Você indica a unidade, a função, o dia e o horário que precisam de reforço.');
+            const statusDetail = statusBar.append('text').attr('x', 500).attr('y', 70).attr('text-anchor', 'middle')
+                .attr('fill', PRIMARY).attr('font-size', 15).attr('font-weight', 600)
+                .text('Mais de 10 mil profissionais cadastrados · Zero processos trabalhistas · 3 em 1');
+
+            const messages = [
+                {
+                    token: '1. TURNO INDICADO',
+                    main: '1. Você indica o turno: unidade, função, dia e horário que precisam de reforço.',
+                    sub: 'A requisição entra imediatamente na plataforma Equipe na Nuvem.'
+                },
+                {
+                    token: '2. IA CONVOCA (+10 MIL)',
+                    main: '2. A IA convoca: encontra profissionais qualificados na base de mais de 10 mil cadastrados.',
+                    sub: 'Respeitando a antecedência legal e a liberdade de resposta do Art. 452-A.'
+                },
+                {
+                    token: '3. CONTRATO + eSOCIAL OK',
+                    main: '3. Contrato e eSocial automáticos: gerados em cada convocação, sem retrabalho do RH.',
+                    sub: 'Garantia de zero passivo trabalhista e conformidade integral com a CLT.'
+                },
+                {
+                    token: '4. PIX NO MESMO DIA!',
+                    main: '4. PIX no mesmo dia: profissional recebe no dia do turno com férias, 13º e DSR proporcionais.',
+                    sub: 'Turno 100% coberto dentro da lei · +10 mil profissionais · Zero processos.'
+                }
+            ];
+
+            function activateStep(stepIdx) {
+                if (myGen !== window.__nuvemGen) return;
+
+                token.transition().duration(750).ease(d3.easeQuadInOut)
+                    .attr('transform', `translate(${xs[stepIdx]}, ${gateY - 195})`);
+                tokenLabel.text(messages[stepIdx].token);
+
+                activeLine.transition().duration(750).ease(d3.easeQuadInOut)
+                    .attr('x2', xs[stepIdx]);
+
+                gateBoxes.transition().duration(450)
+                    .attr('stroke', (d, i) => i <= stepIdx ? PRIMARY : 'rgba(255,255,255,0.16)')
+                    .attr('fill', (d, i) => i === stepIdx ? 'rgba(77, 163, 255, 0.12)' : 'rgba(20, 20, 20, 0.92)');
+
+                gateCircles.transition().duration(450)
+                    .attr('r', (d, i) => i === stepIdx ? 48 : 42)
+                    .attr('fill', (d, i) => i <= stepIdx ? 'rgba(77, 163, 255, 0.22)' : 'rgba(255,255,255,0.05)');
+
+                gateCheck.transition().duration(450)
+                    .attr('opacity', (d, i) => i <= stepIdx ? 1 : 0.25)
+                    .text((d, i) => i < stepIdx ? 'CONCLUÍDO ✓' : (i === stepIdx ? 'EM EXECUÇÃO ●' : 'AGUARDANDO'));
+
+                statusMain.text(messages[stepIdx].main);
+                statusDetail.text(messages[stepIdx].sub);
+            }
+
+            function runPipeline() {
+                if (myGen !== window.__nuvemGen) return;
+                activateStep(0);
+                window.__nuvemTimer = setTimeout(() => {
+                    if (myGen !== window.__nuvemGen) return;
+                    activateStep(1);
+                    window.__nuvemTimer = setTimeout(() => {
+                        if (myGen !== window.__nuvemGen) return;
+                        activateStep(2);
+                        window.__nuvemTimer = setTimeout(() => {
+                            if (myGen !== window.__nuvemGen) return;
+                            activateStep(3);
+                            // Repouso de 2.2s no estado final completo antes de reiniciar o loop
+                            window.__nuvemTimer = setTimeout(() => {
+                                if (myGen !== window.__nuvemGen) return;
+                                runPipeline();
+                            }, 2800);
+                        }, 2100);
+                    }, 2100);
+                }, 2100);
+            }
+
+            runPipeline();
+        }
+
+        // ===== REGISTRO DE TRIGGERS E REPLAY (Padrão mira-animator) =====
+        function setupAnimationTriggers() {
+            const stages = [
+                { stage: document.getElementById('escala-stage'), fn: animateEscala, replay: 'replay-escala' },
+                { stage: document.getElementById('nuvem-stage'), fn: animateNuvem, replay: 'replay-nuvem' }
+            ].filter(s => s.stage);
+
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const item = stages.find(s => s.stage === entry.target);
+                    if (!item) return;
+                    if (entry.isIntersecting) {
+                        item.fn();
+                    }
+                });
+            }, { threshold: 0.25 });
+
+            stages.forEach(s => {
+                io.observe(s.stage);
+                const btn = document.getElementById(s.replay);
+                if (btn) btn.addEventListener('click', () => s.fn());
+            });
+        }
+
+        // === CONTROLES DE NAVEGAÇÃO CARD-A-CARD ===
+        function setupFullScreenWrappers() {
+            // Mantido para compatibilidade estrutural; cada <section> já é fullscreen
+        }
+
+        // === AVISO DE ROTAÇÃO: tela cheia + trava em paisagem quando o navegador permite ===
+        (function () {
+            const fsBtn = document.getElementById('rotate-fullscreen');
+            const dismissBtn = document.getElementById('rotate-dismiss');
+            if (fsBtn) fsBtn.addEventListener('click', async () => {
+                try {
+                    const el = document.documentElement;
+                    if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen();
+                    if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+                } catch (e) { /* iOS/Safari não permite travar: o aviso segue pedindo para girar */ }
+            });
+            if (dismissBtn) dismissBtn.addEventListener('click', () => {
+                document.body.classList.add('rotate-dismissed');
+            });
+            // Ao girar de volta, reavalia os palcos D3 para redimensionar
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
+            });
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAnimationTriggers();
+
+            const cardSections = Array.from(document.querySelectorAll('body > section'));
+            if (cardSections.length === 0) return;
+
+            const progress = document.getElementById('mira-progress');
+            const nextBtn = document.getElementById('mira-next');
+            const nextIcon = document.getElementById('mira-next-icon');
+            const headerBtn = document.getElementById('header-next-btn');
+
+            const atBottom = () =>
+                (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 100);
+
+            function currentIndex() {
+                const y = window.scrollY + window.innerHeight * 0.3;
+                let idx = 0;
+                for (let i = 0; i < cardSections.length; i++) {
+                    if (cardSections[i].offsetTop <= y) idx = i;
+                }
+                return idx;
+            }
+
+            function goTo(i) {
+                const idx = Math.max(0, Math.min(cardSections.length - 1, i));
+                cardSections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            if (headerBtn) {
+                headerBtn.addEventListener('click', () => goTo(1));
+            }
+
+            window.addEventListener('scroll', () => {
+                const docH = document.documentElement.scrollHeight - window.innerHeight;
+                progress.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+                nextBtn.classList.toggle('visible', window.scrollY > 300);
+                nextIcon.setAttribute('data-lucide', atBottom() ? 'chevron-up' : 'chevron-down');
+                lucide.createIcons();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (atBottom()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+                goTo(currentIndex() + 1);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (['ArrowRight', 'ArrowDown', 'PageDown'].includes(e.key)) {
+                    e.preventDefault();
+                    goTo(currentIndex() + 1);
+                } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+                    e.preventDefault();
+                    const idx = currentIndex();
+                    if (idx <= 0) window.scrollTo({ top: 0, behavior: 'smooth' });
+                    else goTo(idx - 1);
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    goTo(cardSections.length - 1);
+                } else if (e.key.toLowerCase() === 'f') {
+                    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+                    else document.exitFullscreen();
                 }
             });
         });
+    </script>
 
-        var nosEls = nos.map(function (n) {
-            return raiz.append('circle')
-                .attr('cx', n.x).attr('cy', n.y).attr('r', 3)
-                .attr('fill', (n.c + n.l) % 2 === 0 ? COR.marca : COR.acento)
-                .attr('opacity', 0.35);
-        });
-
-        var pulsos = [];
-        for (var k = 0; k < 12; k++) {
-            pulsos.push({
-                el: raiz.append('circle').attr('r', 4).attr('fill', k % 2 === 0 ? COR.marca : COR.acento),
-                offset: (k * 0.08) % 1
-            });
-        }
-
-        var CICLO = 8000;
-        reger(svgId, function (ms) {
-            nosEls.forEach(function (el, idx) {
-                var pulse = Math.sin(ms * 0.003 + idx * 0.5) * 0.25 + 0.35;
-                el.attr('opacity', pulse).attr('r', 2.5 + pulse * 1.8);
-            });
-
-            pulsos.forEach(function (p, idx) {
-                var prog = ((ms * 0.0003) + p.offset) % 1;
-                var n1 = nos[(idx * 2) % nos.length];
-                var n2 = nos[(idx * 2 + 3) % nos.length];
-                var px = n1.x + (n2.x - n1.x) * prog;
-                var py = n1.y + (n2.y - n1.y) * prog;
-                p.el.attr('cx', px).attr('cy', py)
-                    .attr('opacity', Math.sin(prog * Math.PI) * 0.65);
-            });
-        });
-    }
-
-    function ligar() {
-        animPotencialSAS('stage-potencial');
-        animSinergia('stage-sinergia');
-        animAmbientes('stage-ambientes');
-        animTresCamadas('stage-camadas');
-        animArticulacaoCHC('stage-chc');
-        animCincoEtapas('stage-etapas');
-        animFechamento('stage-fechamento');
-    }
-
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);
-    else ligar();
-})();
-</script>
-<script>
-/* ==============================================================
-   Navegação slide a slide: teclado, botões de seta e toque (mobile).
-
-   As guardas importam: durante a EDIÇÃO (tecla E) e a PINTURA
-   (tecla P) o teclado/toque pertence a esses modos. Sem isso, arrastar
-   um elemento com a seta trocaria de slide no meio da edição.
-   ============================================================== */
-(function () {
-    'use strict';
-    var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
-    var btnPrev = document.getElementById('nav-btn-prev');
-    var btnNext = document.getElementById('nav-btn-next');
-
-    function atual() {
-        var meio = window.innerHeight / 2, achado = 0;
-        secs.forEach(function (s, i) {
-            var r = s.getBoundingClientRect();
-            if (r.top <= meio && r.bottom > meio) achado = i;
-        });
-        return achado;
-    }
-
-    function atualizarBotoes(i) {
-        if (typeof i !== 'number') i = atual();
-        if (btnPrev) {
-            if (i <= 0) btnPrev.classList.add('disabled');
-            else btnPrev.classList.remove('disabled');
-        }
-        if (btnNext) {
-            if (i >= secs.length - 1) btnNext.classList.add('disabled');
-            else btnNext.classList.remove('disabled');
-        }
-    }
-
-    function ir(d) {
-        var de = atual(), i = Math.max(0, Math.min(secs.length - 1, de + d));
-        if (i === de) return;
-        secs[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        atualizarBotoes(i);
-    }
-
-    // Teclado (Desktop)
-    document.addEventListener('keydown', function (e) {
-        if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
-        var t = e.target;
-        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
-        if (e.ctrlKey || e.metaKey || e.altKey) return;
-        if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); ir(1); }
-        else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); ir(-1); }
-    });
-
-    // Cliques nos botões de seta da interface
-    if (btnPrev) {
-        btnPrev.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            ir(-1);
-        });
-    }
-    if (btnNext) {
-        btnNext.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            ir(1);
-        });
-    }
-
-    // Toque na tela (Mobile: toque para mudar o slide e suporte a deslize horizontal)
-    var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-    window.addEventListener('touchstart', function (e) {
-        if (e.touches && e.touches.length === 1) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-        }
-    }, { passive: true });
-
-    window.addEventListener('touchend', function (e) {
-        if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
-        var t = e.target;
-        // Não intercepta se o toque foi num botão, link, no próprio menu ou num controle interativo
-        if (t && (t.closest('#mira-nav') || t.closest('button') || t.closest('a') || t.closest('.replay-btn') || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
-
-        if (!e.changedTouches || e.changedTouches.length === 0) return;
-        var endX = e.changedTouches[0].clientX;
-        var endY = e.changedTouches[0].clientY;
-        var dx = endX - touchStartX;
-        var dy = endY - touchStartY;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        var dur = Date.now() - touchStartTime;
-
-        // Gesto de deslize (swipe) horizontal
-        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && dur < 600) {
-            if (dx < 0) ir(1);
-            else ir(-1);
-            return;
-        }
-
-        // Toque na tela (tap): duração curta e sem arrastar ("no celular é só tocar na tela para mudar o slide")
-        if (dist < 18 && dur < 400) {
-            // Toque na faixa esquerda (20% da tela) volta; toque no restante avança
-            if (touchStartX < window.innerWidth * 0.20) {
-                ir(-1);
-            } else {
-                ir(1);
-            }
-        }
-    }, { passive: true });
-
-    /* ---------- desenho (tecla P) pertence AO SLIDE ----------
-       O mira-draw pinta num <canvas> único, fixo sobre a janela: sem
-       isto, o traço feito num slide fica pairando sobre todos os outros,
-       como se você tivesse riscado a tela e não o slide.
-
-       Aqui os traços são guardados por slide e trocados junto com ele:
-       sai do slide, o desenho sai; volta, o desenho volta. Usa a API
-       pública `getShapes`/`setShapes` do mira-draw, sem tocar no módulo.
-
-       No palco do mira-remote o desenho é da shell (modelo global
-       sincronizado com o celular), então lá isto não se mete. */
-    var porSlide = {}, ultimo = -1;
-    function trocarDesenho() {
-        atualizarBotoes();
-        if (window.__MIRA_REMOTE_STAGE__) return;
-        var md = window.miraDraw;
-        if (!md || !md.getShapes || !md.setShapes) return;   // deck sem a caneta
-        var i = atual();
-        if (i === ultimo) return;
-        if (ultimo >= 0) porSlide[ultimo] = md.getShapes();  // guarda o que estava
-        ultimo = i;
-        md.setShapes(porSlide[i] || []);
-    }
-    window.addEventListener('load', function () {
-        ultimo = atual();
-        atualizarBotoes(ultimo);
-    });
-    window.addEventListener('scroll', trocarDesenho, { passive: true });
-})();
-</script>
-
-<script defer src="mira/mira-edit.js"></script>
-<script defer src="mira/mira-edit-free.js"></script>
-<script defer src="mira/mira-draw.js"></script>
+    <!-- Módulos de autoria do Mira (edição e desenho) -->
+    <script src="mira/mira-edit.js" defer></script>
+    <script src="mira/mira-edit-free.js" defer></script>
+    <script src="mira/mira-draw.js" defer></script>
 </body>
+
 </html>
