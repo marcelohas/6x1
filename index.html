@@ -309,7 +309,10 @@
           #mira-next { width: 38px !important; height: 38px !important; bottom: 12px !important; right: 12px !important; }
         }
 
-        /* === AVISO "GIRE O CELULAR" (só em celular/tablet na vertical) === */
+        /* === CAPA: palco de partículas ocupa a seção inteira === */
+        #capa-stage svg { width: 100%; height: 100%; display: block; }
+
+        /* === AVISO "GIRE O CELULAR": deck só funciona na horizontal === */
         #mira-rotate {
           display: none;
           position: fixed; inset: 0; z-index: 100000;
@@ -348,25 +351,24 @@
           border-radius: 9999px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer;
         }
         #mira-rotate .rotate-primary { background: var(--mira-primary); color: var(--mira-bg); border: none; }
-        #mira-rotate .rotate-secondary { background: transparent; color: var(--mira-text-softer); border: 1px solid var(--mira-pill-border); }
 
-        @media (orientation: portrait) and (max-width: 900px) {
-          body:not(.rotate-dismissed) #mira-rotate { display: flex; }
-          body:not(.rotate-dismissed) { overflow: hidden; }
+        /* Na vertical (celular/tablet) o deck fica bloqueado até girar o aparelho */
+        @media (orientation: portrait) and (max-width: 1024px) {
+          #mira-rotate { display: flex; }
+          body { overflow: hidden; }
         }
         /* @MIRA:RESPONSIVE:END */
     </style>
 </head>
 
 <body>
-    <!-- Aviso para girar o celular (aparece só na vertical em telas pequenas) -->
+    <!-- Aviso para girar o celular (aparece só na vertical em celular/tablet) -->
     <div id="mira-rotate" role="dialog" aria-live="polite">
         <div class="rotate-phone" aria-hidden="true"></div>
         <h2>Gire o celular <span class="primary-color italic">na horizontal</span></h2>
         <p>Esta apresentação foi feita para a tela deitada. Vire o aparelho para ver os slides e as animações por inteiro.</p>
         <div class="rotate-actions">
             <button type="button" class="rotate-primary" id="rotate-fullscreen">Tela cheia na horizontal</button>
-            <button type="button" class="rotate-secondary" id="rotate-dismiss">Continuar na vertical</button>
         </div>
     </div>
 
@@ -514,7 +516,7 @@
             </div>
 
             <div class="glass-card rounded-2xl p-2 md:p-4">
-                <div class="flex items-center justify-between mb-2 px-2">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2 px-2">
                     <div class="flex items-center gap-3">
                         <div class="icon-container">
                             <i data-lucide="calculator" class="w-5 h-5 primary-color"></i>
@@ -807,30 +809,30 @@
                     </thead>
                     <tbody class="divide-y divide-white/10" id="tabela-saidas">
                         <tr class="saida-row transition-all duration-500">
-                            <td class="py-4 px-4 text-white font-bold">Contratar fixo</td>
-                            <td class="py-4 px-4 text-soft text-sm">Folha permanente maior, inclusive nos dias de menor movimento</td>
-                            <td class="py-4 px-4 text-soft text-sm">Recrutamento e admissão</td>
-                            <td class="py-4 px-4">
+                            <td data-label="Saída" class="py-4 px-4 text-white font-bold">Contratar fixo</td>
+                            <td data-label="Custo" class="py-4 px-4 text-soft text-sm">Folha permanente maior, inclusive nos dias de menor movimento</td>
+                            <td data-label="Prazo" class="py-4 px-4 text-soft text-sm">Recrutamento e admissão</td>
+                            <td data-label="Risco" class="py-4 px-4">
                                 <span class="bg-white/10 text-white text-xs px-3 py-1 rounded-full border border-white/20">
                                     Ociosidade fora do pico
                                 </span>
                             </td>
                         </tr>
                         <tr class="saida-row transition-all duration-500">
-                            <td class="py-4 px-4 text-white font-bold">Ampliar a jornada do time atual</td>
-                            <td class="py-4 px-4 text-soft text-sm">Horas extras recorrentes</td>
-                            <td class="py-4 px-4 text-soft text-sm">Imediato</td>
-                            <td class="py-4 px-4">
+                            <td data-label="Saída" class="py-4 px-4 text-white font-bold">Ampliar a jornada do time atual</td>
+                            <td data-label="Custo" class="py-4 px-4 text-soft text-sm">Horas extras recorrentes</td>
+                            <td data-label="Prazo" class="py-4 px-4 text-soft text-sm">Imediato</td>
+                            <td data-label="Risco" class="py-4 px-4">
                                 <span class="bg-white/10 text-white text-xs px-3 py-1 rounded-full border border-white/20">
                                     Passivo trabalhista e desgaste
                                 </span>
                             </td>
                         </tr>
                         <tr class="saida-row transition-all duration-500 bg-white/5">
-                            <td class="py-4 px-4 primary-color font-black">Completar com intermitentes</td>
-                            <td class="py-4 px-4 text-white text-sm font-medium">Só os turnos trabalhados</td>
-                            <td class="py-4 px-4 text-white text-sm font-medium">Convocação com 3 dias de antecedência</td>
-                            <td class="py-4 px-4">
+                            <td data-label="Saída" class="py-4 px-4 primary-color font-black">Completar com intermitentes</td>
+                            <td data-label="Custo" class="py-4 px-4 text-white text-sm font-medium">Só os turnos trabalhados</td>
+                            <td data-label="Prazo" class="py-4 px-4 text-white text-sm font-medium">Convocação com 3 dias de antecedência</td>
+                            <td data-label="Risco" class="py-4 px-4">
                                 <span class="primary-bg text-black font-bold text-xs px-3 py-1 rounded-full">
                                     Baixo (com contrato, eSocial e PIX corretos)
                                 </span>
@@ -930,7 +932,7 @@
             </div>
 
             <div class="glass-card rounded-2xl p-2 md:p-4">
-                <div class="flex items-center justify-between mb-2 px-2">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2 px-2">
                     <div class="flex items-center gap-3">
                         <div class="icon-container">
                             <i data-lucide="cpu" class="w-5 h-5 primary-color"></i>
@@ -1477,7 +1479,7 @@
             // Ator Focal: Cartão de Turno Verificado viajando pelos 4 portões
             const token = svg.append('g').attr('transform', `translate(${xs[0]}, ${gateY - 195})`);
             token.append('rect')
-                .attr('x', -88).attr('y', -22).attr('width', 176).attr('height', 44).attr('rx', 22)
+                .attr('x', -125).attr('y', -22).attr('width', 250).attr('height', 44).attr('rx', 22)
                 .attr('fill', PRIMARY).style('filter', `drop-shadow(0 0 16px ${PRIMARY})`);
             const tokenLabel = token.append('text')
                 .attr('x', 0).attr('y', 5).attr('text-anchor', 'middle')
@@ -1601,16 +1603,12 @@
         // === AVISO DE ROTAÇÃO: tela cheia + trava em paisagem quando o navegador permite ===
         (function () {
             const fsBtn = document.getElementById('rotate-fullscreen');
-            const dismissBtn = document.getElementById('rotate-dismiss');
             if (fsBtn) fsBtn.addEventListener('click', async () => {
                 try {
                     const el = document.documentElement;
                     if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen();
                     if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
                 } catch (e) { /* iOS/Safari não permite travar: o aviso segue pedindo para girar */ }
-            });
-            if (dismissBtn) dismissBtn.addEventListener('click', () => {
-                document.body.classList.add('rotate-dismissed');
             });
             // Ao girar de volta, reavalia os palcos D3 para redimensionar
             window.addEventListener('orientationchange', () => {
